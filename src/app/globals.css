@@ -1,26 +1,155 @@
+
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+/* ── Import Vanilla CSS Sheets ── */
+@import "../assets/css/tokens.css";
+@import "../assets/css/landingPage.css";
+@import "../assets/css/onboarding.css";
+@import "../assets/css/dashboard.css";
+@import "../assets/css/board.css";
+@import "../assets/css/topics.css";
+@import "../assets/css/badges.css";
+@import "../assets/css/settings.css";
+@import "../assets/css/coming-soon.css";
+
+/* ============================================================
+   AlgoBoard — Design System Tokens (Tailwind v4 @theme)
+   ============================================================ */
+
+@theme {
+  /* ── Surfaces ── */
+  --color-surface:          #111319;
+  --color-surface-dim:      #111319;
+  --color-surface-bright:   #373940;
+  --color-surface-lowest:   #0C0E14;
+  --color-surface-low:      #191B22;
+  --color-surface-container:#1E1F26;
+  --color-surface-high:     #282A30;
+  --color-surface-highest:  #33343B;
+  --color-surface-variant:  #33343B;
+
+  /* ── Primary (Indigo) ── */
+  --color-primary:            #BEC2FF;
+  --color-primary-container:  #5865F2;
+  --color-on-primary:         #000DA4;
+  --color-on-primary-container: #FFFDFF;
+
+  /* ── Secondary (Teal) ── */
+  --color-secondary:            #5DDCB3;
+  --color-secondary-container:  #05A47F;
+  --color-on-secondary:         #003829;
+
+  /* ── Tertiary (Purple) ── */
+  --color-tertiary:             #D0BCFF;
+  --color-tertiary-container:   #8555EF;
+
+  /* ── Error ── */
+  --color-error:                #FFB4AB;
+  --color-error-container:      #93000A;
+
+  /* ── Text ── */
+  --color-on-surface:           #E2E2EB;
+  --color-on-surface-variant:   #C6C5D7;
+
+  /* ── Outlines ── */
+  --color-outline:              #8F8FA0;
+  --color-outline-variant:      #454655;
+
+  /* ── CF Rank Colors ── */
+  --color-rank-newbie:          #808080;
+  --color-rank-pupil:           #008000;
+  --color-rank-specialist:      #03A89E;
+  --color-rank-expert:          #0000FF;
+  --color-rank-candidate-master:#AA00AA;
+  --color-rank-master:          #FF8C00;
+  --color-rank-grandmaster:     #FF0000;
+
+  /* ── Semantic ── */
+  --color-amber:                #F5A623;
+  --color-amber-dim:            #C47D0E;
+
+  /* ── Typography ── */
+  --font-display: var(--font-display, "Space Grotesk", sans-serif);
+  --font-body:    var(--font-body, "Inter", sans-serif);
+  --font-mono:    var(--font-mono, "JetBrains Mono", monospace);
+  --font-sans:    var(--font-body, "Inter", sans-serif);
+
+  /* ── Border Radius ── */
+  --radius-xs:   0.125rem;
+  --radius-sm:   0.25rem;
+  --radius-md:   0.375rem;
+  --radius-lg:   0.5rem;
+  --radius-xl:   0.75rem;
+  --radius-2xl:  1rem;
+  --radius-full: 9999px;
+
+  /* ── Shadows ── */
+  --shadow-sm:           0 2px 8px rgba(12, 14, 20, 0.4);
+  --shadow-md:           0 4px 16px rgba(12, 14, 20, 0.5);
+  --shadow-lg:           0 8px 32px rgba(12, 14, 20, 0.6);
+  --shadow-glow-primary: 0 0 20px rgba(88, 101, 242, 0.3);
+  --shadow-glow-secondary: 0 0 20px rgba(93, 220, 179, 0.3);
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+/* ── Base Reset ── */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+html {
+  font-size: 16px;
+  scroll-behavior: smooth;
+  height: 100%;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-body);
+  background-color: var(--color-surface);
+  color: var(--color-on-surface);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  min-height: 100%;
+}
+
+/* ── Animations ── */
+@keyframes fadeSlideIn {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes dotBounce {
+  0%, 80%, 100% { transform: scale(0.6); opacity: 0.5; }
+  40%           { transform: scale(1);   opacity: 1;   }
+}
+@keyframes spinCW {
+  to { transform: rotate(360deg); }
+}
+.animate-fade-slide-in {
+  animation: fadeSlideIn 0.35s ease both;
+}
+
+/* ── Heatmap cell hover scale ── */
+.heatmap-cell-hover:hover {
+  transform: scale(1.4);
+  z-index: 1;
+  position: relative;
+  transition: transform 0.1s;
+}
+
+/* ── Custom Scrollbar ── */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: var(--color-surface-lowest);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--color-outline-variant);
+  border-radius: var(--radius-full);
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-outline);
 }
