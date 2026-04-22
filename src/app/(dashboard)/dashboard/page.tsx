@@ -1,30 +1,41 @@
 // Stats Dashboard — Route: /dashboard
-// Reference: frontend/dashboard.html + frontend/css/dashboard.css
-// SRS: F03–F08
-// Phase 6
+// Fetches real CF data from the database
 
-import {
-  MOCK_USER,
-  MOCK_RATING_HISTORY,
-  MOCK_PROBLEMS_BY_RATING,
-  MOCK_TOPICS_SOLVED,
-} from "@/lib/mock-data";
+import { auth } from "@/lib/auth";
+import { connectMongoose } from "@/lib/db";
+import UserModel from "@/lib/models/User";
+import { redirect } from "next/navigation";
 import ProfileHeader from "@/components/dashboard/ProfileHeader";
 import SubmissionHeatmap from "@/components/dashboard/SubmissionHeatmap";
 import RatingBucketChart from "@/components/dashboard/RatingBucketChart";
 import TopicTagChart from "@/components/dashboard/TopicTagChart";
 import RatingGraph from "@/components/dashboard/RatingGraph";
 import ContestTable from "@/components/dashboard/ContestTable";
+import SyncButton from "@/components/dashboard/SyncButton";
+import DailyProblem from "@/components/dashboard/DailyProblem";
+import Link from "next/link";
 
-export default function DashboardPage() {
-  // Aggregate stats from mock data (real values come from DB in backend phase)
-  const solvedCount = MOCK_PROBLEMS_BY_RATING.reduce(
-    (sum, d) => sum + d.count,
-    0,
-  );
-  const contestCount = MOCK_RATING_HISTORY.length;
+export default async function DashboardPage() {
+  const session = await auth();
+  if (!session?.user?.id) {
+    redirect("/api/auth/signin");
+  }
 
-  const hasCfHandle = !!MOCK_USER.cfHandle;
+  await connectMongoose();
+  const userDoc = await UserModel.findById(session.user.id).lean();
+
+  if (!userDoc) {
+    redirect("/api/auth/signin");
+  }
+
+  if (!userDoc.onboardingComplete) {
+    redirect("/onboarding");
+  }
+
+  // Serialize user data for client components
+  const user = JSON.parse(JSON.stringify(userDoc));
+
+  const hasCfHandle = !!user.cfHandle && user.cfHandleVerified;
 
   if (!hasCfHandle) {
     return (
@@ -35,11 +46,6 @@ export default function DashboardPage() {
           padding: "2rem",
         }}
       >
-        <ProfileHeader
-          user={{ ...MOCK_USER, cfHandle: undefined, cfProfile: undefined }}
-          solvedCount={0}
-          contestCount={0}
-        />
         <div
           style={{
             marginTop: "2rem",
@@ -68,72 +74,92 @@ export default function DashboardPage() {
             Connect your Codeforces handle to unlock your stats, rating history,
             and upsolving board.
           </p>
-          <button
+          <Link
+            href="/onboarding"
             style={{
+              display: "inline-block",
               background:
                 "linear-gradient(135deg, var(--color-primary-container), var(--color-primary))",
               color: "#fff",
               padding: "0.75rem 1.5rem",
               borderRadius: "0.5rem",
               fontWeight: 600,
+              textDecoration: "none",
             }}
           >
             Connect Codeforces Handle
-          </button>
+          </Link>
         </div>
       </div>
     );
   }
 
+  // Aggregate stats
+  const solvedCount = user.solvedProblems?.length || 0;
+  const contestCount = user.contestHistory?.length || 0;
+
+  // Group problems by rating bucket
+  const ratingBuckets = [800, 900, 1000, 1100, 1200, 1300, 1400, 1500, 1600, 1700, 1800, 1900, 2000, 2100, 2200, 2300, 2400, 2500];
+  const problemsByRating = ratingBuckets.map((rating) => ({
+    rating,
+    count: user.solvedProblems?.filter((p) => p.rating === rating).length || 0,
+  }));
+
+  // Group problems by tag (top 10)
+  const tagCounts = new Map<string, number>();
+  user.solvedProblems?.forEach((p) => {
+    p.tags.forEach((tag: string) => {
+      tagCounts.set(tag, (tagCounts.get(tag) || 0) + 1);
+    });
+  });
+  const topicsSolved = Array.from(tagCounts.entries())
+    .map(([tag, count]) => ({ tag, count }))
+    .sort((a, b) => b.count - a.count)
+    .slice(0, 10);
+
+  // Rating history for graph
+  const ratingHistory = user.contestHistory?.map((c) => ({
+    contestId: c.contestId,
+    contestName: c.contestName,
+    rank: c.rank,
+    oldRating: c.oldRating,
+    newRating: c.newRating,
+    ratingChange: c.ratingChange,
+    participatedAt: c.participatedAt,
+  })) || [];
+
+  // Calculate last synced time
+  const lastSynced = user.cfProfile?.lastSyncedAt
+    ? new Date(user.cfProfile.lastSyncedAt)
+    : null;
+
   return (
     <>
       <header className="dash-header">
         <h1 className="dash-header__title">Dashboard</h1>
-        <div className="dash-header__right">
-          <span className="dash-header__sync-text">
-            Last synced <b>2 min ago</b>
-          </span>
-          <button className="btn-sync">
-            <svg
-              width="14"
-              height="14"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2.5"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <polyline points="23 4 23 10 17 10" />
-              <polyline points="1 20 1 14 7 14" />
-              <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" />
-            </svg>
-            Sync Now
-          </button>
-        </div>
+        <SyncButton lastSynced={lastSynced} />
       </header>
 
       <div className="dash-content">
         <ProfileHeader
-          user={MOCK_USER}
+          user={user}
           solvedCount={solvedCount}
           contestCount={contestCount}
         />
 
-        {/* Row 2: Submission heatmap */}
+        {/* Daily Problem Challenge */}
+        <DailyProblem />
+
         <SubmissionHeatmap totalSubmissions={solvedCount} />
 
-        {/* Row 3: Rating bucket chart (wider) + Topic tag chart */}
         <div className="row-charts">
-          <RatingBucketChart data={MOCK_PROBLEMS_BY_RATING} />
-          <TopicTagChart data={MOCK_TOPICS_SOLVED} />
+          <RatingBucketChart data={problemsByRating} />
+          <TopicTagChart data={topicsSolved} />
         </div>
 
-        {/* Row 4: Rating progress line chart */}
-        <RatingGraph data={MOCK_RATING_HISTORY} />
+        <RatingGraph data={ratingHistory} />
 
-        {/* Row 5: Contest history table */}
-        <ContestTable data={MOCK_RATING_HISTORY} />
+        <ContestTable data={ratingHistory} />
       </div>
     </>
   );

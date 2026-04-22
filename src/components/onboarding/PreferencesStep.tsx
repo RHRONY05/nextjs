@@ -21,12 +21,37 @@ export default function PreferencesStep({ onBack }: Props) {
   const [frequency, setFrequency]       = useState("daily");
   const [saving, setSaving]             = useState(false);
 
-  function handleSave() {
+  async function handleSave() {
     setSaving(true);
-    // Simulate save — 1.5 s delay, then redirect to dashboard
-    setTimeout(() => {
-      router.push("/dashboard");
-    }, 1500);
+
+    try {
+      const res = await fetch("/api/onboarding/complete", {
+        method:  "POST",
+        headers: { "Content-Type": "application/json" },
+        body:    JSON.stringify({
+          targetRank: selectedRank,
+          emailPreferences: {
+            enabled:       emailEnabled,
+            frequency:     frequency,
+            preferredHour: 9,
+            timezone:      "UTC",
+          },
+        }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        alert(data.message ?? "Failed to save preferences. Please try again.");
+        setSaving(false);
+        return;
+      }
+
+      router.push(data.redirectTo ?? "/dashboard");
+    } catch {
+      alert("Network error. Please check your connection and try again.");
+      setSaving(false);
+    }
   }
 
   return (

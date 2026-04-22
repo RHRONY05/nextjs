@@ -11,10 +11,18 @@ interface Props {
 
 type VerifyPhase = "waiting" | "success" | "expired";
 
+interface VerificationProblem {
+  contestId: number;
+  problemIndex: string;
+  problemName: string;
+  url: string;
+}
+
 export default function VerifyStep({ cfData, onComplete, onBack }: Props) {
-  const [secondsLeft, setSecondsLeft] = useState(600); // 10 minutes
+  const [secondsLeft, setSecondsLeft] = useState(600);
   const [phase, setPhase]             = useState<VerifyPhase>("waiting");
   const [pollText, setPollText]       = useState("Waiting for your submission on Codeforces...");
+  const [problem, setProblem]         = useState<VerificationProblem | null>(null);
 
   const countdownRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const pollRef      = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -27,6 +35,35 @@ export default function VerifyStep({ cfData, onComplete, onBack }: Props) {
   }
 
   useEffect(() => {
+    // Initiate verification
+    (async () => {
+      try {
+        const res = await fetch("/api/onboarding/verify/initiate", {
+          method:  "POST",
+          headers: { "Content-Type": "application/json" },
+          body:    JSON.stringify({ cfHandle: cfData.handle }),
+        });
+        const data = await res.json();
+
+        if (!res.ok) {
+          setPollText(data.message ?? "Failed to initiate verification. Please go back and try again.");
+          setPhase("expired");
+          return;
+        }
+
+        setProblem(data.verificationProblem);
+
+        // Calculate time remaining from server response
+        const expiresAt = new Date(data.expiresAt).getTime();
+        const now = Date.now();
+        const remaining = Math.max(0, Math.floor((expiresAt - now) / 1000));
+        setSecondsLeft(remaining);
+      } catch {
+        setPollText("Network error. Please go back and try again.");
+        setPhase("expired");
+      }
+    })();
+
     // Countdown every second
     countdownRef.current = setInterval(() => {
       setSecondsLeft((s) => {
@@ -40,28 +77,38 @@ export default function VerifyStep({ cfData, onComplete, onBack }: Props) {
       });
     }, 1000);
 
-    // Simulate polling — update text every 4 s, detect after ~8 s
+    // Poll status every 5 seconds
     const pollTexts = [
       "Waiting for your submission on Codeforces...",
       "Checking for recent submissions...",
       "Still watching for your solve...",
     ];
     let pollCount = 0;
-    pollRef.current = setInterval(() => {
+
+    pollRef.current = setInterval(async () => {
       pollCount++;
       setPollText(pollTexts[Math.min(pollCount, pollTexts.length - 1)]);
 
-      if (pollCount >= 2) {
-        clearInterval(pollRef.current!);
-        if (countdownRef.current) clearInterval(countdownRef.current);
-        setPhase("success");
-        // Auto-advance after 2 s
-        successRef.current = setTimeout(() => onComplete(), 2000);
+      try {
+        const res = await fetch("/api/onboarding/verify/status");
+        const data = await res.json();
+
+        if (data.status === "verified") {
+          stop();
+          setPhase("success");
+          successRef.current = setTimeout(() => onComplete(), 2000);
+        } else if (data.status === "expired") {
+          stop();
+          setPhase("expired");
+          setPollText(data.message ?? "Time expired. Please go back and try again.");
+        }
+      } catch {
+        // Network error — keep polling
       }
-    }, 4000);
+    }, 5000);
 
     return stop;
-  }, [onComplete]);
+  }, [cfData.handle, onComplete]);
 
   const mm = String(Math.floor(secondsLeft / 60)).padStart(2, "0");
   const ss = String(secondsLeft % 60).padStart(2, "0");
@@ -125,36 +172,38 @@ export default function VerifyStep({ cfData, onComplete, onBack }: Props) {
         </p>
 
         {/* Problem card */}
-        <div
-          className="flex items-center justify-between gap-3 rounded-lg mb-3"
-          style={{ background: "var(--color-surface-high)", padding: "0.75rem 1rem" }}
-        >
-          <span className="font-display font-bold" style={{ fontSize: "0.9375rem", color: "var(--color-on-surface)" }}>
-            4A — Watermelon
-          </span>
-          <a
-            href="https://codeforces.com/problemset/problem/4/A"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center gap-1.5 shrink-0 rounded-md transition-colors"
-            style={{
-              fontSize: "0.8125rem",
-              fontWeight: 600,
-              color: "var(--color-primary)",
-              border: "1px solid var(--color-primary-container)",
-              padding: "0.4rem 0.9rem",
-              textDecoration: "none",
-              whiteSpace: "nowrap",
-            }}
+        {problem && (
+          <div
+            className="flex items-center justify-between gap-3 rounded-lg mb-3"
+            style={{ background: "var(--color-surface-high)", padding: "0.75rem 1rem" }}
           >
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
-              <polyline points="15 3 21 3 21 9"/>
-              <line x1="10" y1="14" x2="21" y2="3"/>
-            </svg>
-            Open on Codeforces
-          </a>
-        </div>
+            <span className="font-display font-bold" style={{ fontSize: "0.9375rem", color: "var(--color-on-surface)" }}>
+              {problem.contestId}{problem.problemIndex} — {problem.problemName}
+            </span>
+            <a
+              href={problem.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-1.5 shrink-0 rounded-md transition-colors"
+              style={{
+                fontSize: "0.8125rem",
+                fontWeight: 600,
+                color: "var(--color-primary)",
+                border: "1px solid var(--color-primary-container)",
+                padding: "0.4rem 0.9rem",
+                textDecoration: "none",
+                whiteSpace: "nowrap",
+              }}
+            >
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
+                <polyline points="15 3 21 3 21 9"/>
+                <line x1="10" y1="14" x2="21" y2="3"/>
+              </svg>
+              Open on Codeforces
+            </a>
+          </div>
+        )}
 
         <p style={{ fontSize: "0.75rem", color: "var(--color-outline)", fontStyle: "italic" }}>
           Any verdict counts — even Wrong Answer. We just need to see a recent submission from this handle.

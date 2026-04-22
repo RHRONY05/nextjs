@@ -30,7 +30,7 @@ export default function ProfileHeader({
     }, 2000);
   }, [syncing]);
 
-  const { cfProfile, gamification } = user;
+  const { cfProfile, gamification = { currentStreak: 0, longestStreak: 0 } } = user;
 
   return (
     <>
@@ -40,7 +40,8 @@ export default function ProfileHeader({
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={
-                user.avatar ??
+                cfProfile?.cfAvatar ||
+                user.avatar ||
                 `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name)}&background=5865F2&color=fff&size=128&bold=true`
               }
               className="profile-card__avatar"
@@ -176,11 +177,11 @@ export default function ProfileHeader({
             </div>
             <div className="stat-card__info">
               <div className="stat-card__value">
-                {gamification.currentStreak}🔥
+                {gamification?.currentStreak ?? 0}🔥
               </div>
               <div className="stat-card__label">Day Streak</div>
               <div className="stat-card__sub">
-                Longest: {gamification.longestStreak} days
+                Longest: {gamification?.longestStreak ?? 0} days
               </div>
             </div>
           </div>

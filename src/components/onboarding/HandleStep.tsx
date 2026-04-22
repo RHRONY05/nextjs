@@ -13,25 +13,15 @@ interface Props {
   onComplete: (data: CfHandleData) => void;
 }
 
-function getRankLabel(rating: number): string {
-  if (rating < 1200) return "Newbie";
-  if (rating < 1400) return "Pupil";
-  if (rating < 1600) return "Specialist";
-  if (rating < 1900) return "Expert";
-  if (rating < 2100) return "Candidate Master";
-  if (rating < 2300) return "Master";
-  return "Grandmaster";
-}
-
-type Phase = "idle" | "loading" | "found";
+type Phase = "idle" | "loading" | "found" | "error";
 
 export default function HandleStep({ onComplete }: Props) {
-  const [phase, setPhase]       = useState<Phase>("idle");
-  const [error, setError]       = useState("");
-  const [found, setFound]       = useState<CfHandleData | null>(null);
-  const inputRef                = useRef<HTMLInputElement>(null);
+  const [phase, setPhase] = useState<Phase>("idle");
+  const [error, setError] = useState("");
+  const [found, setFound] = useState<CfHandleData | null>(null);
+  const inputRef          = useRef<HTMLInputElement>(null);
 
-  function handleLookup() {
+  async function handleLookup() {
     const handle = inputRef.current?.value.trim() ?? "";
     setError("");
 
@@ -43,19 +33,32 @@ export default function HandleStep({ onComplete }: Props) {
 
     setPhase("loading");
 
-    // Simulate CF API call — 1.2s delay, any non-empty handle succeeds
-    setTimeout(() => {
-      const rating = Math.floor(Math.random() * 700) + 1100; // 1100–1800
-      const rank   = getRankLabel(rating);
-      const data: CfHandleData = {
-        handle,
-        rating,
-        rank,
-        avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(handle)}&background=5865F2&color=fff`,
-      };
-      setFound(data);
+    try {
+      const res  = await fetch("/api/onboarding/handle", {
+        method:  "POST",
+        headers: { "Content-Type": "application/json" },
+        body:    JSON.stringify({ cfHandle: handle }),
+      });
+      const data = await res.json();
+
+      if (!res.ok) {
+        setError(data.message ?? "Something went wrong. Please try again.");
+        setPhase("error");
+        return;
+      }
+
+      const p = data.cfProfile;
+      setFound({
+        handle: p.handle,
+        rating: p.rating ?? 0,
+        rank:   p.rank   ?? "unrated",
+        avatar: p.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(p.handle)}&background=5865F2&color=fff`,
+      });
       setPhase("found");
-    }, 1200);
+    } catch {
+      setError("Network error. Please check your connection and try again.");
+      setPhase("error");
+    }
   }
 
   function handleContinue() {
@@ -114,7 +117,7 @@ export default function HandleStep({ onComplete }: Props) {
         </div>
       )}
 
-      {/* Handle input field */}
+      {/* Handle input */}
       <div className="mb-5">
         <label
           htmlFor="cf-handle-input"
@@ -155,7 +158,7 @@ export default function HandleStep({ onComplete }: Props) {
         )}
       </div>
 
-      {/* CTA button */}
+      {/* CTA */}
       <button
         onClick={isFound ? handleContinue : handleLookup}
         disabled={phase === "loading"}

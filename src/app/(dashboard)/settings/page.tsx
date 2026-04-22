@@ -1,11 +1,88 @@
+"use client";
+
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+
 export default function SettingsPage() {
+  const router = useRouter();
+  const [loading, setLoading] = useState(true);
+  const [user, setUser] = useState<any>(null);
+  const [emailEnabled, setEmailEnabled] = useState(true);
+  const [frequency, setFrequency] = useState("daily");
+  const [preferredTime, setPreferredTime] = useState("7");
+  const [timezone, setTimezone] = useState("Asia/Dhaka");
+  const [selectedRank, setSelectedRank] = useState("expert");
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    // Fetch user data
+    fetch("/api/user")
+      .then((res) => res.json())
+      .then((data) => {
+        setUser(data);
+        setEmailEnabled(data.emailPreferences?.enabled ?? false);
+        setFrequency(data.emailPreferences?.frequency ?? "daily");
+        setPreferredTime(String(data.emailPreferences?.preferredHour ?? 7));
+        setTimezone(data.emailPreferences?.timezone ?? "UTC");
+        setSelectedRank(data.targetRank ?? "expert");
+        setLoading(false);
+      })
+      .catch(() => setLoading(false));
+  }, []);
+
+  async function handleSave() {
+    setSaving(true);
+    try {
+      const res = await fetch("/api/user/profile", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          targetRank: selectedRank,
+          emailPreferences: {
+            enabled: emailEnabled,
+            frequency,
+            preferredHour: parseInt(preferredTime),
+            timezone,
+          },
+        }),
+      });
+
+      if (res.ok) {
+        alert("Settings saved successfully!");
+      } else {
+        const data = await res.json();
+        alert(data.message || "Failed to save settings");
+      }
+    } catch {
+      alert("Network error. Please try again.");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  if (loading) {
+    return <div style={{ padding: "2rem" }}>Loading...</div>;
+  }
+
+  if (!user) {
+    return <div style={{ padding: "2rem" }}>Failed to load user data</div>;
+  }
+
   return (
     <>
 
 
     <header className="settings-header">
       <h1 className="settings-header__title">Settings</h1>
-      <button className="btn-save-all" id="save-btn" >Save Changes</button>
+      <button 
+        className="btn-save-all" 
+        id="save-btn"
+        onClick={handleSave}
+        disabled={saving}
+        style={{ opacity: saving ? 0.6 : 1 }}
+      >
+        {saving ? "Saving..." : "Save Changes"}
+      </button>
     </header>
 
     <div className="settings-content">
@@ -23,11 +100,11 @@ export default function SettingsPage() {
         </div>
         <div className="s-panel__body">
           <div className="profile-avatar-row">
-            <img src="https://ui-avatars.com/api/?name=Rony&background=5865F2&color=fff&size=128&bold=true"
+            <img src={user.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name)}&background=5865F2&color=fff&size=128&bold=true`}
                  className="profile-avatar" alt="avatar" />
             <div className="profile-avatar-info">
-              <div className="profile-avatar-info__name" id="profile-name">Rony</div>
-              <div className="profile-avatar-info__email" id="profile-email">rony@example.com</div>
+              <div className="profile-avatar-info__name" id="profile-name">{user.name}</div>
+              <div className="profile-avatar-info__email" id="profile-email">{user.email}</div>
               <div>
                 <span className="google-badge">
                   <svg width="10" height="10" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -58,11 +135,18 @@ export default function SettingsPage() {
             <div className="cf-handle-box__left">
               <div className="cf-handle-box__verified">✓</div>
               <div>
-                <div className="cf-handle-box__handle" id="cf-handle-display">rony_cf</div>
-                <div className="cf-handle-box__rating" id="cf-rating-display">1342 · Specialist · Peak: 1398</div>
+                <div className="cf-handle-box__handle" id="cf-handle-display">{user.cfHandle || "Not connected"}</div>
+                <div className="cf-handle-box__rating" id="cf-rating-display">
+                  {user.cfProfile?.rating || "—"} · {user.cfProfile?.rank || "—"} · Peak: {user.cfProfile?.maxRating || "—"}
+                </div>
               </div>
             </div>
-            <button className="btn-reverify" >Re-verify Handle</button>
+            <button 
+              className="btn-reverify"
+              onClick={() => router.push("/onboarding")}
+            >
+              Re-verify Handle
+            </button>
           </div>
         </div>
       </div>
@@ -80,22 +164,42 @@ export default function SettingsPage() {
         </div>
         <div className="s-panel__body">
           <div className="rank-mini-grid" id="rank-grid">
-            <div className="rank-mini-card" data-rank="specialist" >
+            <div 
+              className={`rank-mini-card ${selectedRank === "specialist" ? "selected" : ""}`}
+              data-rank="specialist"
+              onClick={() => setSelectedRank("specialist")}
+              style={{ cursor: "pointer" }}
+            >
               <div className="rank-mini-card__icon">🟢</div>
               <div className="rank-mini-card__name">Specialist</div>
               <div className="rank-mini-card__range">1400 – 1599</div>
             </div>
-            <div className="rank-mini-card selected" data-rank="expert" >
+            <div 
+              className={`rank-mini-card ${selectedRank === "expert" ? "selected" : ""}`}
+              data-rank="expert"
+              onClick={() => setSelectedRank("expert")}
+              style={{ cursor: "pointer" }}
+            >
               <div className="rank-mini-card__icon">🔵</div>
               <div className="rank-mini-card__name">Expert</div>
               <div className="rank-mini-card__range">1600 – 1899</div>
             </div>
-            <div className="rank-mini-card" data-rank="candidate_master" >
+            <div 
+              className={`rank-mini-card ${selectedRank === "candidate_master" ? "selected" : ""}`}
+              data-rank="candidate_master"
+              onClick={() => setSelectedRank("candidate_master")}
+              style={{ cursor: "pointer" }}
+            >
               <div className="rank-mini-card__icon">🟣</div>
               <div className="rank-mini-card__name">Candidate Master</div>
               <div className="rank-mini-card__range">1900 – 2099</div>
             </div>
-            <div className="rank-mini-card" data-rank="master" >
+            <div 
+              className={`rank-mini-card ${selectedRank === "master" ? "selected" : ""}`}
+              data-rank="master"
+              onClick={() => setSelectedRank("master")}
+              style={{ cursor: "pointer" }}
+            >
               <div className="rank-mini-card__icon">🟠</div>
               <div className="rank-mini-card__name">Master</div>
               <div className="rank-mini-card__range">2100+</div>
@@ -122,7 +226,12 @@ export default function SettingsPage() {
               <span className="form-hint">Receive 3 personalised CF problems matching your level every morning</span>
             </div>
             <label className="toggle">
-              <input type="checkbox" id="email-toggle" checked />
+              <input 
+                type="checkbox" 
+                id="email-toggle" 
+                checked={emailEnabled}
+                onChange={(e) => setEmailEnabled(e.target.checked)}
+              />
               <div className="toggle__track"></div>
             </label>
           </div>
@@ -134,17 +243,27 @@ export default function SettingsPage() {
             <div className="s-select-row">
               <div>
                 <label className="s-select-label" htmlFor="freq-select">Send Frequency</label>
-                <select className="s-select" id="freq-select">
-                  <option value="daily" selected>Daily</option>
+                <select 
+                  className="s-select" 
+                  id="freq-select"
+                  value={frequency}
+                  onChange={(e) => setFrequency(e.target.value)}
+                >
+                  <option value="daily">Daily</option>
                   <option value="every2days">Every 2 Days</option>
                   <option value="weekly">Weekly</option>
                 </select>
               </div>
               <div>
                 <label className="s-select-label" htmlFor="time-select">Preferred Time</label>
-                <select className="s-select" id="time-select">
+                <select 
+                  className="s-select" 
+                  id="time-select"
+                  value={preferredTime}
+                  onChange={(e) => setPreferredTime(e.target.value)}
+                >
                   <option value="6">6:00 AM</option>
-                  <option value="7" selected>7:00 AM</option>
+                  <option value="7">7:00 AM</option>
                   <option value="8">8:00 AM</option>
                   <option value="9">9:00 AM</option>
                   <option value="10">10:00 AM</option>
@@ -158,8 +277,13 @@ export default function SettingsPage() {
             {/**/}
             <div>
               <label className="s-select-label" htmlFor="tz-select">Timezone</label>
-              <select className="s-select" id="tz-select">
-                <option value="Asia/Dhaka" selected>Asia/Dhaka (GMT+6)</option>
+              <select 
+                className="s-select" 
+                id="tz-select"
+                value={timezone}
+                onChange={(e) => setTimezone(e.target.value)}
+              >
+                <option value="Asia/Dhaka">Asia/Dhaka (GMT+6)</option>
                 <option value="UTC">UTC (GMT+0)</option>
                 <option value="America/New_York">America/New_York (GMT-5)</option>
                 <option value="America/Los_Angeles">America/Los_Angeles (GMT-8)</option>
