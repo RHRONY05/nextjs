@@ -6,7 +6,7 @@ import { connectMongoose } from "@/lib/db";
 import UserModel from "@/lib/models/User";
 import { redirect } from "next/navigation";
 import ProfileHeader from "@/components/dashboard/ProfileHeader";
-import SubmissionHeatmap from "@/components/dashboard/SubmissionHeatmap";
+import ActivityHeatmap from "@/components/dashboard/ActivityHeatmap";
 import RatingBucketChart from "@/components/dashboard/RatingBucketChart";
 import TopicTagChart from "@/components/dashboard/TopicTagChart";
 import RatingGraph from "@/components/dashboard/RatingGraph";
@@ -150,7 +150,7 @@ export default async function DashboardPage() {
         {/* Daily Problem Challenge */}
         <DailyProblem />
 
-        <SubmissionHeatmap totalSubmissions={solvedCount} />
+        <ActivityHeatmap handle={user.cfHandle} />
 
         <div className="row-charts">
           <RatingBucketChart data={problemsByRating} />

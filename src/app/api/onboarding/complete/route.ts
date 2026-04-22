@@ -85,7 +85,7 @@ export async function POST(request: NextRequest) {
         maxRank: cfUser.maxRank,
         country: cfUser.country,
         organization: cfUser.organization,
-        cfAvatar: cfUser.titlePhoto ? `https:${cfUser.titlePhoto}` : (cfUser.avatar ? `https:${cfUser.avatar}` : undefined),
+        cfAvatar: cfUser.titlePhoto || cfUser.avatar,
         lastSyncedAt: new Date(),
       };
 

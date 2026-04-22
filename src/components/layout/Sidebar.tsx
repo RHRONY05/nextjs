@@ -2,9 +2,12 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { MOCK_USER } from "@/lib/mock-data";
+import { signOut } from "next-auth/react";
+import { useState, useEffect } from "react";
+import type { User } from "@/types";
 
 const NAV_ITEMS = [
+// ... (NAV_ITEMS and getIconFor remain same)
   { label: "Dashboard", href: "/dashboard" },
   { label: "Upsolve Board", href: "/board" },
   { label: "Topic Ladder", href: "/topics" },
@@ -107,11 +110,49 @@ function getIconFor(label: string) {
   }
 }
 
-export default function Sidebar() {
+export default function Sidebar({ user }: { user: User }) {
   const pathname = usePathname();
+  const [mounted, setMounted] = useState(false);
+  const [avatarError, setAvatarError] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   function isActive(href: string) {
     return pathname === href || pathname.startsWith(href + "/");
+  }
+
+  // Handle Codeforces avatar URL protocol
+  const getAvatarUrl = () => {
+    // If the image fails to load, we'll try fallbacks in the onError handler
+    // This function just returns the initial best candidate
+
+    const avatar = user.cfProfile?.cfAvatar;
+    if (avatar && !avatarError) {
+      if (avatar.startsWith("https:https://")) {
+        return avatar.replace("https:https://", "https://");
+      }
+      return avatar.startsWith("//") ? `https:${avatar}` : avatar;
+    }
+
+    if (user.avatar && !avatarError) {
+      return user.avatar;
+    }
+
+    return `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name)}&background=5865F2&color=fff&size=128&bold=true`;
+  };
+
+  if (!mounted) {
+    return (
+      <aside className="sidebar">
+        <div className="sidebar__logo">
+          <div className="sidebar__logo-dot" />
+          <span className="sidebar__logo-text">AlgoBoard</span>
+        </div>
+        <nav className="sidebar__nav" />
+      </aside>
+    );
   }
 
   return (
@@ -159,27 +200,62 @@ export default function Sidebar() {
           </svg>
           Settings
         </Link>
+
+        {/* Logout */}
+        <button
+          onClick={() => signOut({ callbackUrl: "/" })}
+          className="sidebar__link logout-btn"
+          style={{
+            background: "none",
+            border: "none",
+            width: "100%",
+            textAlign: "left",
+            cursor: "pointer",
+            color: "var(--color-error, #ffb4ab)",
+            display: "flex",
+            alignItems: "center",
+            gap: "12px",
+            padding: "12px 16px",
+            fontSize: "0.875rem",
+            fontWeight: 500,
+            borderRadius: "8px",
+          }}
+        >
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            width="20"
+            height="20"
+          >
+            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+            <polyline points="16 17 21 12 16 7" />
+            <line x1="21" y1="12" x2="9" y2="12" />
+          </svg>
+          Logout
+        </button>
       </nav>
 
       {/* ── User section ── */}
       <div className="sidebar__user">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
-          src={
-            MOCK_USER.avatar ??
-            `https://ui-avatars.com/api/?name=${encodeURIComponent(MOCK_USER.name)}&background=5865F2&color=fff&size=128&bold=true`
-          }
-          alt={MOCK_USER.name}
+          src={getAvatarUrl()}
+          alt={user.name}
           className="sidebar__user-avatar"
+          onError={() => setAvatarError(true)}
         />
 
         <div className="sidebar__user-info">
-          <div className="sidebar__user-name">{MOCK_USER.name}</div>
+          <div className="sidebar__user-name">{user.name}</div>
           <div className="sidebar__user-rank">
-            {MOCK_USER.cfProfile?.rank
-              ? MOCK_USER.cfProfile.rank.charAt(0).toUpperCase() +
-                MOCK_USER.cfProfile.rank.slice(1).replace(/_/g, " ")
-              : "Specialist"}
+            {user.cfProfile?.rank
+              ? user.cfProfile.rank.charAt(0).toUpperCase() +
+                user.cfProfile.rank.slice(1).replace(/_/g, " ")
+              : "Newcomer"}
           </div>
         </div>
       </div>

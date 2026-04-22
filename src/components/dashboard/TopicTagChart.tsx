@@ -8,6 +8,7 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from "recharts";
+import { useState, useEffect } from "react";
 
 interface DataPoint {
   tag: string;
@@ -41,6 +42,28 @@ function CustomTooltip({ active, payload, label }: any) {
 }
 
 export default function TopicTagChart({ data }: Props) {
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted) {
+    return (
+      <div
+        className="rounded-xl p-5"
+        style={{ background: "var(--color-surface-low)", height: "318px" }}
+      >
+        <div
+          className="font-display font-bold mb-4"
+          style={{ fontSize: "0.9375rem", color: "var(--color-on-surface)" }}
+        >
+          Top Topics
+        </div>
+        <div className="animate-pulse w-full h-[240px] bg-surface-container rounded-lg"></div>
+      </div>
+    );
+  }
+
   return (
     <div
       className="rounded-xl p-5"

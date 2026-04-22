@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import type { User } from "@/types";
 
 interface Props {
@@ -13,6 +13,22 @@ function capitalize(s?: string) {
   return s ? s.charAt(0).toUpperCase() + s.slice(1).replace(/_/g, " ") : "—";
 }
 
+function getRankColor(rank?: string) {
+  if (!rank) return "var(--color-on-surface)";
+  const r = rank.toLowerCase();
+  if (r.includes("legendary")) return "#ff0000";
+  if (r.includes("international grandmaster")) return "#ff0000";
+  if (r.includes("grandmaster")) return "#ff0000";
+  if (r.includes("international master")) return "#ff8c00";
+  if (r.includes("master")) return "#ff8c00";
+  if (r.includes("candidate master")) return "#a0a";
+  if (r.includes("expert")) return "#0000ff";
+  if (r.includes("specialist")) return "#03a89e";
+  if (r.includes("pupil")) return "#008000";
+  if (r.includes("newbie")) return "#808080";
+  return "var(--color-on-surface)";
+}
+
 export default function ProfileHeader({
   user,
   solvedCount,
@@ -20,6 +36,49 @@ export default function ProfileHeader({
 }: Props) {
   const [syncing, setSyncing] = useState(false);
   const [syncText, setSyncText] = useState("2 min ago");
+  const [mounted, setMounted] = useState(false);
+  const [avatarError, setAvatarError] = useState(false);
+
+  // Fallback state if DB doesn't have the CF profile or we want to fetch it live
+  const [liveProfile, setLiveProfile] = useState(user.cfProfile);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if (!user.cfHandle) return;
+    
+    // Always try to get the freshest data for the profile header directly from CF
+    const controller = new AbortController();
+    fetch(`https://codeforces.com/api/user.info?handles=${user.cfHandle}`, {
+      signal: controller.signal
+    })
+      .then(res => res.json())
+      .then(data => {
+        if (data.status === "OK" && data.result?.length > 0) {
+          const p = data.result[0];
+          setLiveProfile({
+            ...user.cfProfile, // merge with existing in case of missing fields
+            handle: p.handle,
+            rating: p.rating,
+            maxRating: p.maxRating,
+            rank: p.rank,
+            maxRank: p.maxRank,
+            country: p.country,
+            organization: p.organization,
+            cfAvatar: p.titlePhoto || p.avatar,
+          });
+        }
+      })
+      .catch(err => {
+        if (err.name !== "AbortError") {
+          console.error("Failed to fetch live CF profile:", err);
+        }
+      });
+
+    return () => controller.abort();
+  }, [user.cfHandle, user.cfProfile]);
 
   const handleSync = useCallback(() => {
     if (syncing) return;
@@ -30,7 +89,40 @@ export default function ProfileHeader({
     }, 2000);
   }, [syncing]);
 
-  const { cfProfile, gamification = { currentStreak: 0, longestStreak: 0 } } = user;
+  const { gamification = { currentStreak: 0, longestStreak: 0 } } = user;
+
+  const getAvatarUrl = () => {
+    // If the image fails to load, we'll try fallbacks in the onError handler
+    // This function just returns the initial best candidate
+
+    const avatar = liveProfile?.cfAvatar;
+    if (avatar && !avatarError) {
+      // Fix double protocol if it was accidentally saved as https:https://
+      if (avatar.startsWith("https:https://")) {
+        return avatar.replace("https:https://", "https://");
+      }
+      return avatar.startsWith("//") ? `https:${avatar}` : avatar;
+    }
+
+    if (user.avatar && !avatarError) {
+      return user.avatar;
+    }
+
+    return `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name)}&background=5865F2&color=fff&size=128&bold=true`;
+  };
+
+  if (!mounted) {
+    return (
+      <div className="row-profile">
+        <div className="profile-card profile-card--skeleton" style={{ height: "160px" }} />
+        <div className="stat-cards">
+          <div className="stat-card stat-card--skeleton" style={{ height: "100px" }} />
+          <div className="stat-card stat-card--skeleton" style={{ height: "100px" }} />
+          <div className="stat-card stat-card--skeleton" style={{ height: "100px" }} />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <>
@@ -39,25 +131,35 @@ export default function ProfileHeader({
           <div className="profile-card__top">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
-              src={
-                cfProfile?.cfAvatar ||
-                user.avatar ||
-                `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name)}&background=5865F2&color=fff&size=128&bold=true`
-              }
+              src={getAvatarUrl()}
               className="profile-card__avatar"
               alt="avatar"
+              onError={() => setAvatarError(true)}
             />
             <div className="profile-card__info">
-              <div className="profile-card__handle">
-                {user.cfHandle ?? user.name}
+              <div 
+                className="profile-card__handle"
+                style={{ color: getRankColor(liveProfile?.rank), fontWeight: "bold" }}
+              >
+                {liveProfile?.rank?.toLowerCase().includes("legendary") ? (
+                  <>
+                    <span style={{ color: "var(--color-on-surface)" }}>{(liveProfile?.handle ?? user.cfHandle)?.[0] ?? user.name[0]}</span>
+                    <span>{((liveProfile as any)?.handle ?? user.cfHandle ?? user.name).slice(1)}</span>
+                  </>
+                ) : (
+                  (liveProfile as any)?.handle ?? user.cfHandle ?? user.name
+                )}
               </div>
-              <span className="profile-card__rating-badge">
-                {cfProfile?.rating ?? "—"} · {capitalize(cfProfile?.rank)}
+              <span 
+                className="profile-card__rating-badge"
+                style={{ color: getRankColor(liveProfile?.rank), fontWeight: 600 }}
+              >
+                {liveProfile?.rating ?? "—"} · {capitalize(liveProfile?.rank)}
               </span>
             </div>
           </div>
           <div className="profile-card__meta">
-            {cfProfile?.country && (
+            {liveProfile?.country && (
               <span className="profile-card__meta-item">
                 <svg
                   width="12"
@@ -70,10 +172,10 @@ export default function ProfileHeader({
                   <circle cx="12" cy="12" r="10" />
                   <path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
                 </svg>
-                <span>{cfProfile.country}</span>
+                <span>{liveProfile.country}</span>
               </span>
             )}
-            {cfProfile?.organization && (
+            {liveProfile?.organization && (
               <span className="profile-card__meta-item">
                 <svg
                   width="12"
@@ -86,7 +188,7 @@ export default function ProfileHeader({
                   <path d="M22 10v6M2 10l10-5 10 5-10 5z" />
                   <path d="M6 12v5c3 3 9 3 12 0v-5" />
                 </svg>
-                <span>{cfProfile.organization}</span>
+                <span>{liveProfile.organization}</span>
               </span>
             )}
           </div>
@@ -103,8 +205,8 @@ export default function ProfileHeader({
               <polyline points="17 6 23 6 23 12" />
             </svg>
             Peak rating:{" "}
-            <span>
-              {cfProfile?.maxRating ?? "—"} ({capitalize(cfProfile?.maxRank)})
+            <span style={{ color: getRankColor(liveProfile?.maxRank), fontWeight: 600 }}>
+              {liveProfile?.maxRating ?? "—"} ({capitalize(liveProfile?.maxRank)})
             </span>
           </div>
         </div>

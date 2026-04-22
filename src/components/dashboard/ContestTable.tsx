@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import type { ContestHistoryEntry } from "@/types";
 
 interface Props {
@@ -19,6 +19,34 @@ function formatDate(d: Date | string) {
 
 export default function ContestTable({ data }: Props) {
   const [page, setPage] = useState(1);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted) {
+    return (
+      <div
+        className="rounded-xl"
+        style={{ background: "var(--color-surface-low)", padding: "1.25rem 1.5rem", height: "400px" }}
+      >
+        <div className="flex items-center justify-between mb-4">
+          <span
+            className="font-display font-bold"
+            style={{ fontSize: "0.9375rem", color: "var(--color-on-surface)" }}
+          >
+            Contest History
+          </span>
+        </div>
+        <div className="animate-pulse space-y-4">
+          {[1, 2, 3, 4, 5].map((i) => (
+            <div key={i} className="h-12 bg-surface-container rounded-lg"></div>
+          ))}
+        </div>
+      </div>
+    );
+  }
 
   const sorted = [...data].reverse(); // most recent first
   const totalPages = Math.ceil(sorted.length / ROWS_PER_PAGE);

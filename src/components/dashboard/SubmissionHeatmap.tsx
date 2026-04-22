@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useState, useEffect } from "react";
 
 interface Props {
   totalSubmissions?: number;
@@ -103,8 +103,44 @@ const LEVEL_COLORS: Record<Level, string> = {
 };
 
 export default function SubmissionHeatmap({ totalSubmissions }: Props) {
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   const { weeks, totalSubs } = useMemo(() => buildHeatmapData(), []);
   const displayTotal = totalSubmissions ?? totalSubs;
+
+  if (!mounted) {
+    return (
+      <div
+        className="rounded-xl"
+        style={{
+          background: "var(--color-surface-low)",
+          padding: "1.25rem 1.5rem",
+          minHeight: "180px",
+        }}
+      >
+        <div className="flex items-center justify-between mb-4">
+          <span
+            className="font-display font-bold"
+            style={{ fontSize: "0.9375rem", color: "var(--color-on-surface)" }}
+          >
+            Submission Activity
+          </span>
+        </div>
+        <div className="animate-pulse flex space-x-4">
+          <div className="flex-1 space-y-4 py-1">
+            <div className="h-4 bg-surface-container rounded w-3/4"></div>
+            <div className="space-y-2">
+              <div className="h-4 bg-surface-container rounded"></div>
+              <div className="h-4 bg-surface-container rounded w-5/6"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div

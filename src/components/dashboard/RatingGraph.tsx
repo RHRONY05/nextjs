@@ -8,6 +8,7 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from "recharts";
+import { useState, useEffect } from "react";
 import type { ContestHistoryEntry } from "@/types";
 
 interface Props {
@@ -79,6 +80,30 @@ function CustomDot(props: any) {
 }
 
 export default function RatingGraph({ data }: Props) {
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted) {
+    return (
+      <div
+        className="rounded-xl p-5"
+        style={{ background: "var(--color-surface-low)", height: "294px" }}
+      >
+        <div className="flex items-center justify-between mb-4">
+          <span
+            className="font-display font-bold"
+            style={{ fontSize: "0.9375rem", color: "var(--color-on-surface)" }}
+          >
+            Rating Progress
+          </span>
+        </div>
+        <div className="animate-pulse w-full h-[220px] bg-surface-container rounded-lg"></div>
+      </div>
+    );
+  }
+
   const minRating = Math.min(...data.map((d) => d.newRating)) - 80;
 
   return (

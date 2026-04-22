@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 
 interface Props {
@@ -11,8 +11,17 @@ export default function SyncButton({ lastSynced }: Props) {
   const router = useRouter();
   const [syncing, setSyncing] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
+  const [mounted, setMounted] = useState(false);
 
-  const syncText = lastSynced ? getTimeAgo(lastSynced) : "Never";
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  const syncText = !mounted 
+    ? "..." 
+    : lastSynced 
+    ? getTimeAgo(lastSynced) 
+    : "Never";
 
   async function handleSync() {
     if (syncing) return;
