@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { signOut } from "next-auth/react";
 import { useState, useEffect } from "react";
 import type { User } from "@/types";
+import { Sword } from "lucide-react";
 
 const NAV_ITEMS = [
 // ... (NAV_ITEMS and getIconFor remain same)
@@ -12,7 +13,7 @@ const NAV_ITEMS = [
   { label: "Upsolve Board", href: "/board" },
   { label: "Topic Ladder", href: "/topics" },
   { label: "Leaderboard", href: "/leaderboard" },
-  { label: "Friend Compare", href: "/compare" },
+  { label: "Code Battle", href: "/battles" },
   { label: "Badges", href: "/badges" },
 ] as const;
 
@@ -105,6 +106,10 @@ function getIconFor(label: string) {
           <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
         </svg>
       );
+      case "Code Battle":
+        return (
+          <Sword className="text-white w-7 h-7" />
+        );
     default:
       return null;
   }
