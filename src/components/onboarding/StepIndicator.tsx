@@ -24,13 +24,13 @@ export default function StepIndicator({ currentStep }: Props) {
             <div className="flex flex-col items-center gap-2 flex-1 relative z-10">
               <div
                 style={{
-                  width: "32px",
-                  height: "32px",
+                  width: "48px",
+                  height: "48px",
                   borderRadius: "9999px",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
-                  fontSize: "0.75rem",
+                  fontSize: "1.125rem",
                   fontWeight: 700,
                   fontFamily: "var(--font-display)",
                   transition: "all 0.25s ease",
@@ -49,15 +49,16 @@ export default function StepIndicator({ currentStep }: Props) {
                     : active
                     ? "var(--color-on-primary-container)"
                     : "var(--color-outline)",
-                  boxShadow: active ? "0 0 16px rgba(88,101,242,0.4)" : "none",
+                  boxShadow: active ? "0 0 24px rgba(88,101,242,0.4)" : "none",
                 }}
               >
                 {complete ? "✓" : step.num}
               </div>
               <span
                 style={{
-                  fontSize: "0.6875rem",
-                  fontWeight: active ? 600 : 500,
+                  fontSize: "1rem",
+                  marginTop: "0.5rem",
+                  fontWeight: active ? 700 : 500,
                   whiteSpace: "nowrap",
                   color: complete
                     ? "var(--color-secondary)"
@@ -75,9 +76,9 @@ export default function StepIndicator({ currentStep }: Props) {
             {i < STEPS.length - 1 && (
               <div
                 style={{
-                  height: "2px",
+                  height: "3px",
                   flex: 1,
-                  marginTop: "-20px", // align with bubble center (label pushes column down)
+                  marginTop: "-30px", // align with bubble center (label pushes column down)
                   position: "relative",
                   zIndex: 0,
                   background: step.num < currentStep

@@ -1,8 +1,10 @@
 // GET /api/topics
 // Fetches problems from Codeforces API filtered by topic and rating
 
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
+import { connectMongoose } from "@/lib/db";
+import UserModel from "@/lib/models/User";
 
 const CF_API_BASE = "https://codeforces.com/api";
 
@@ -47,12 +49,22 @@ const TOPICS = [
   "schedules",
 ];
 
-export async function GET(request: Request) {
+export async function GET(request: NextRequest) {
   const session = await auth();
   if (!session?.user?.id) {
     return NextResponse.json(
       { error: true, message: "Unauthorized", code: "UNAUTHORIZED" },
       { status: 401 },
+    );
+  }
+
+  await connectMongoose();
+  const user = await UserModel.findById(session.user.id);
+  
+  if (!user || !user.cfHandleVerified) {
+    return NextResponse.json(
+      { error: true, message: "CF handle not verified", code: "HANDLE_NOT_VERIFIED" },
+      { status: 404 }
     );
   }
 

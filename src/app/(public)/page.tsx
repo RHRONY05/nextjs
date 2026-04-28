@@ -378,184 +378,236 @@ export default async function LandingPage() {
           minHeight: "100vh",
           display: "flex",
           alignItems: "center",
-          padding: "96px 3rem 6rem", // was 96px 2rem 4rem
+          justifyContent: "center",
+          padding: "96px 2rem 6rem",
           position: "relative",
           overflow: "hidden",
+          textAlign: "center",
         }}
       >
         {/* Glow orbs */}
         <div
           style={{
             position: "absolute",
-            top: "-200px",
-            right: "-200px",
-            width: "700px",
-            height: "700px",
+            top: "10%",
+            left: "50%",
+            transform: "translateX(-50%)",
+            width: "800px",
+            height: "800px",
             background:
-              "radial-gradient(circle, rgba(88,101,242,0.12) 0%, transparent 70%)",
+              "radial-gradient(circle, rgba(88,101,242,0.15) 0%, transparent 70%)",
             pointerEvents: "none",
           }}
         />
         <div
           style={{
             position: "absolute",
-            bottom: "-100px",
-            left: "30%",
-            width: "500px",
-            height: "500px",
+            bottom: "-10%",
+            left: "50%",
+            transform: "translateX(-50%)",
+            width: "600px",
+            height: "600px",
             background:
-              "radial-gradient(circle, rgba(93,220,179,0.06) 0%, transparent 70%)",
+              "radial-gradient(circle, rgba(93,220,179,0.08) 0%, transparent 70%)",
             pointerEvents: "none",
           }}
         />
 
         <div
           style={{
-            maxWidth: "1280px",
+            maxWidth: "900px",
             margin: "0 auto",
-            display: "grid",
-            gridTemplateColumns: "1fr 1fr",
-            gap: "5rem",
+            display: "flex",
+            flexDirection: "column",
             alignItems: "center",
             width: "100%",
+            zIndex: 1,
           }}
         >
-          {/* Left: Text */}
-          <div>
-            {/* Badge */}
+          {/* Badge */}
+          <div
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: "0.5rem",
+              background: "rgba(88,101,242,0.12)",
+              color: "var(--color-primary)",
+              fontSize: "0.875rem",
+              fontWeight: 600,
+              padding: "0.5rem 1.25rem",
+              borderRadius: "9999px",
+              marginBottom: "2.5rem",
+              letterSpacing: "0.02em",
+              border: "1px solid rgba(88,101,242,0.2)",
+            }}
+          >
             <div
+              style={{
+                width: "8px",
+                height: "8px",
+                background: "var(--color-primary-container)",
+                borderRadius: "9999px",
+                boxShadow: "0 0 10px var(--color-primary-container)",
+              }}
+            />
+            Built by a lost CF user, for every lost CF user
+          </div>
+
+          {/* Headline — bigger and bolder */}
+          <h1
+            style={{
+              fontFamily: "var(--font-display)",
+              fontSize: "clamp(3rem, 6vw, 5.5rem)",
+              fontWeight: 800,
+              lineHeight: 1.1,
+              color: "var(--color-on-surface)",
+              marginBottom: "2rem",
+              letterSpacing: "-0.03em",
+              maxWidth: "1000px",
+            }}
+          >
+            Stop forgetting what you{" "}
+            <span
+              style={{
+                background: gradientPrimary,
+                WebkitBackgroundClip: "text",
+                WebkitTextFillColor: "transparent",
+                backgroundClip: "text",
+                display: "inline-block",
+                padding: "0 0.1em",
+              }}
+            >
+              failed.
+            </span>{" "}
+            Start actually{" "}
+            <span style={{ position: "relative", whiteSpace: "nowrap" }}>
+              improving.
+              <svg
+                style={{
+                  position: "absolute",
+                  bottom: "-8px",
+                  left: 0,
+                  width: "100%",
+                  height: "12px",
+                  color: "var(--color-secondary)",
+                }}
+                viewBox="0 0 200 12"
+                fill="none"
+                preserveAspectRatio="none"
+              >
+                <path
+                  d="M2,10 Q50,2 100,6 T198,8"
+                  stroke="currentColor"
+                  strokeWidth="3"
+                  strokeLinecap="round"
+                />
+              </svg>
+            </span>
+          </h1>
+
+          {/* Subtext */}
+          <p
+            style={{
+              fontSize: "clamp(1.125rem, 2vw, 1.375rem)",
+              color: "var(--color-on-surface-variant)",
+              lineHeight: 1.6,
+              marginBottom: "3.5rem",
+              maxWidth: "700px",
+            }}
+          >
+            AlgoBoard{" "}
+            <strong style={{ color: "var(--color-on-surface)" }}>
+              syncs your Codeforces contests
+            </strong>
+            , tracks every problem you didn&apos;t solve, and builds your{" "}
+            <strong style={{ color: "var(--color-on-surface)" }}>
+              personal learning path
+            </strong>{" "}
+            — all in one dashboard.
+          </p>
+
+          {/* CTA buttons */}
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: "1.5rem",
+              flexWrap: "wrap",
+            }}
+          >
+            <SignInButton
               style={{
                 display: "inline-flex",
                 alignItems: "center",
-                gap: "0.5rem",
-                background: "rgba(88,101,242,0.12)",
-                color: "var(--color-primary)",
-                fontSize: "0.8125rem",
+                gap: "0.75rem",
+                background: "var(--color-primary)",
+                color: "var(--color-on-primary-container)",
+                border: "none",
+                borderRadius: "0.75rem",
+                padding: "1.125rem 2.5rem",
+                fontSize: "1.125rem",
                 fontWeight: 600,
-                padding: "0.375rem 1rem",
-                borderRadius: "9999px",
-                marginBottom: "1.5rem",
-                letterSpacing: "0.02em",
+                textDecoration: "none",
+                fontFamily: "var(--font-body)",
+                boxShadow: "0 8px 24px rgba(88,101,242,0.3)",
+                transition: "transform 0.2s, box-shadow 0.2s",
               }}
             >
-              <div
-                style={{
-                  width: "6px",
-                  height: "6px",
-                  background: "var(--color-primary-container)",
-                  borderRadius: "9999px",
-                }}
-              />
-              Built by a lost CF user, for every lost CF user
-            </div>
-
-            {/* Headline — bigger and bolder */}
-            <h1
+              <svg width="24" height="24" viewBox="0 0 48 48" fill="none">
+                <path
+                  fill="#EA4335"
+                  d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"
+                />
+                <path
+                  fill="#4285F4"
+                  d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"
+                />
+                <path
+                  fill="#FBBC05"
+                  d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"
+                />
+                <path
+                  fill="#34A853"
+                  d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"
+                />
+                <path fill="none" d="M0 0h48v48H0z" />
+              </svg>
+              Sign in with Google
+            </SignInButton>
+            <Link
+              href="/dashboard"
               style={{
-                fontFamily: "var(--font-display)",
-                fontSize: "clamp(2.5rem, 4.5vw, 4rem)",
-                fontWeight: 700,
-                lineHeight: 1.12,
-                color: "var(--color-on-surface)",
-                marginBottom: "1.5rem",
-                letterSpacing: "-0.02em",
-              }}
-            >
-              Stop forgetting
-              <br />
-              what you{" "}
-              <span
-                style={{
-                  background: gradientPrimary,
-                  WebkitBackgroundClip: "text",
-                  WebkitTextFillColor: "transparent",
-                  backgroundClip: "text",
-                }}
-              >
-                failed.
-              </span>
-              <br />
-              Start actually improving.
-            </h1>
-
-            {/* Subtext */}
-            <p
-              style={{
-                fontSize: "1.1875rem",
-                color: "var(--color-on-surface-variant)",
-                lineHeight: 1.75,
-                marginBottom: "2.25rem",
-                maxWidth: "520px",
-              }}
-            >
-              AlgoBoard syncs your Codeforces contests, tracks every problem you
-              didn&apos;t solve, and builds your personal learning path — all in
-              one dashboard.
-            </p>
-
-            {/* CTA buttons */}
-            <div
-              style={{
-                display: "flex",
+                display: "inline-flex",
                 alignItems: "center",
-                gap: "1.25rem",
-                flexWrap: "wrap",
+                gap: "0.75rem",
+                color: "var(--color-on-surface)",
+                background: "var(--color-surface-high)",
+                border: "1px solid var(--color-outline-variant)",
+                borderRadius: "0.75rem",
+                padding: "1.125rem 2.5rem",
+                fontSize: "1.125rem",
+                fontWeight: 600,
+                textDecoration: "none",
+                fontFamily: "var(--font-body)",
+                transition: "background 0.2s",
               }}
             >
-              <SignInButton
-                style={{
-                  display: "inline-flex",
-                  alignItems: "center",
-                  gap: "0.625rem",
-                  background: gradientPrimary,
-                  color: "var(--color-on-primary-container)",
-                  border: "none",
-                  borderRadius: "0.625rem",
-                  padding: "0.9375rem 2rem",
-                  fontSize: "1.0625rem",
-                  fontWeight: 600,
-                  textDecoration: "none",
-                  fontFamily: "var(--font-body)",
-                }}
-              >
-                Get Started Free <ArrowRight />
-              </SignInButton>
-              <Link
-                href="/dashboard"
-                style={{
-                  display: "inline-flex",
-                  alignItems: "center",
-                  gap: "0.625rem",
-                  color: "var(--color-primary)",
-                  background: "transparent",
-                  border: "1px solid var(--color-primary-container)",
-                  borderRadius: "0.625rem",
-                  padding: "0.9375rem 2rem",
-                  fontSize: "1.0625rem",
-                  fontWeight: 500,
-                  textDecoration: "none",
-                  fontFamily: "var(--font-body)",
-                }}
-              >
-                View Demo
-              </Link>
-            </div>
-
-            <p
-              style={{
-                fontSize: "0.9375rem",
-                color: "var(--color-outline)",
-                fontStyle: "italic",
-                marginTop: "1.5rem",
-              }}
-            >
-              No credit card · Free forever for core features · Syncs with
-              Codeforces
-            </p>
+              View Demo
+            </Link>
           </div>
 
-          {/* Right: Kanban Mockup */}
-          <KanbanMockup />
+          <p
+            style={{
+              fontSize: "0.9375rem",
+              color: "var(--color-outline)",
+              fontStyle: "italic",
+              marginTop: "2rem",
+            }}
+          >
+            No credit card · Free forever for core features · Syncs with
+            Codeforces
+          </p>
         </div>
       </section>
 

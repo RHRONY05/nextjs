@@ -1,4 +1,20 @@
-export default function ComparePage() {
+import ConnectCfPrompt from "@/components/dashboard/ConnectCfPrompt";
+import { auth } from "@/lib/auth";
+import { connectMongoose } from "@/lib/db";
+import UserModel from "@/lib/models/User";
+import { redirect } from "next/navigation";
+
+export default async function ComparePage() {
+  const session = await auth();
+  if (!session?.user?.id) redirect("/api/auth/signin");
+
+  await connectMongoose();
+  const user = await UserModel.findById(session.user.id).lean();
+
+  if (!user?.cfHandleVerified) {
+    return <ConnectCfPrompt featureName="Friend Compare" />;
+  }
+
   return (
     <>
 

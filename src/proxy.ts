@@ -1,14 +1,13 @@
 import NextAuth from "next-auth";
 import { authConfig } from "@/lib/auth.config";
 import { NextResponse } from "next/server";
-import type { NextRequest } from "next/server";
 
 // Use the edge-safe config (no DB imports) so this runs on the Edge runtime.
 // Next.js 16 renamed "middleware" to "proxy" — export as `proxy` or default.
 const { auth } = NextAuth(authConfig);
 
 // Wrap auth with custom logic
-export default auth(async function middleware(req: NextRequest) {
+export default auth(async function middleware(req) {
   const session = req.auth;
   const { pathname } = req.nextUrl;
 
@@ -23,28 +22,9 @@ export default auth(async function middleware(req: NextRequest) {
   }
 
   // If authenticated, check onboarding status
-  if (session?.user?.id && !isPublicRoute && pathname !== "/onboarding") {
-    // Fetch user to check onboarding status
-    const baseUrl = req.nextUrl.origin;
-    try {
-      const userRes = await fetch(`${baseUrl}/api/user`, {
-        headers: {
-          cookie: req.headers.get("cookie") || "",
-        },
-      });
-
-      if (userRes.ok) {
-        const user = await userRes.json();
-
-        // If onboarding not complete and not on onboarding page
-        if (!user.onboardingComplete && pathname !== "/onboarding") {
-          return NextResponse.redirect(new URL("/onboarding", req.url));
-        }
-      }
-    } catch (error) {
-      console.error("Proxy error:", error);
-    }
-  }
+  // We removed the strict redirect to /onboarding here because we want users
+  // to be able to access the dashboard even without connecting their CF handle.
+  // The pages themselves now handle the missing CF profile with a ConnectCfPrompt.
 
   // If onboarding complete but on onboarding page, redirect to dashboard
   if (session?.user?.id && pathname === "/onboarding") {

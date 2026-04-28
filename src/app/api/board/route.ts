@@ -5,6 +5,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { connectMongoose } from "@/lib/db";
 import KanbanCardModel from "@/lib/models/KanbanCard";
+import UserModel from "@/lib/models/User";
 
 export async function GET() {
   const session = await auth();
@@ -16,6 +17,18 @@ export async function GET() {
   }
 
   await connectMongoose();
+  const user = await UserModel.findById(session.user.id);
+  if (!user || !user.cfHandleVerified) {
+    return NextResponse.json(
+      {
+        error: true,
+        message: "CF handle not verified",
+        code: "HANDLE_NOT_VERIFIED",
+      },
+      { status: 404 },
+    );
+  }
+
   const cards = await KanbanCardModel.find({ userId: session.user.id })
     .sort({ position: 1 })
     .lean();
@@ -44,17 +57,27 @@ export async function POST(request: NextRequest) {
 
   if (!problemUrl) {
     return NextResponse.json(
-      { error: true, message: "problemUrl is required", code: "VALIDATION_ERROR" },
+      {
+        error: true,
+        message: "problemUrl is required",
+        code: "VALIDATION_ERROR",
+      },
       { status: 400 },
     );
   }
 
   // Parse CF problem URL
   // Format: https://codeforces.com/contest/1234/problem/A or /problemset/problem/1234/A
-  const match = problemUrl.match(/\/(?:contest|problemset\/problem)\/(\d+)\/([A-Z]\d?)/i);
+  const match = problemUrl.match(
+    /\/(?:contest|problemset\/problem)\/(\d+)\/([A-Z]\d?)/i,
+  );
   if (!match) {
     return NextResponse.json(
-      { error: true, message: "Invalid CF problem URL format", code: "VALIDATION_ERROR" },
+      {
+        error: true,
+        message: "Invalid CF problem URL format",
+        code: "VALIDATION_ERROR",
+      },
       { status: 400 },
     );
   }
@@ -73,30 +96,44 @@ export async function POST(request: NextRequest) {
 
   if (existing) {
     return NextResponse.json(
-      { error: true, message: "Problem already exists on your board", code: "DUPLICATE_ENTRY" },
+      {
+        error: true,
+        message: "Problem already exists on your board",
+        code: "DUPLICATE_ENTRY",
+      },
       { status: 409 },
     );
   }
 
   // Fetch problem details from CF API
   try {
-    const problemsetRes = await fetch("https://codeforces.com/api/problemset.problems");
+    const problemsetRes = await fetch(
+      "https://codeforces.com/api/problemset.problems",
+    );
     const problemsetData = await problemsetRes.json();
 
     if (problemsetData.status !== "OK") {
       return NextResponse.json(
-        { error: true, message: "Failed to fetch problem details", code: "CF_API_UNAVAILABLE" },
+        {
+          error: true,
+          message: "Failed to fetch problem details",
+          code: "CF_API_UNAVAILABLE",
+        },
         { status: 503 },
       );
     }
 
     const problem = problemsetData.result.problems.find(
-      (p: any) => p.contestId === contestId && p.index === problemIndex
+      (p: any) => p.contestId === contestId && p.index === problemIndex,
     );
 
     if (!problem) {
       return NextResponse.json(
-        { error: true, message: "Problem not found on Codeforces", code: "NOT_FOUND" },
+        {
+          error: true,
+          message: "Problem not found on Codeforces",
+          code: "NOT_FOUND",
+        },
         { status: 404 },
       );
     }
@@ -123,15 +160,18 @@ export async function POST(request: NextRequest) {
       source,
     });
 
-    return NextResponse.json({
-      message: "Card added to board",
-      card: {
-        id: card._id.toString(),
-        problemName: card.problemName,
-        rating: card.rating,
-        column: card.column,
+    return NextResponse.json(
+      {
+        message: "Card added to board",
+        card: {
+          id: card._id.toString(),
+          problemName: card.problemName,
+          rating: card.rating,
+          column: card.column,
+        },
       },
-    }, { status: 201 });
+      { status: 201 },
+    );
   } catch (error) {
     console.error("Add card error:", error);
     return NextResponse.json(

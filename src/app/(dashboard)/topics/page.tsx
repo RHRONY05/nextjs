@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import ConnectCfPrompt from "@/components/dashboard/ConnectCfPrompt";
 
 interface Problem {
   contestId: number;
@@ -19,6 +20,7 @@ export default function TopicsPage() {
   const [problems, setProblems] = useState<Problem[]>([]);
   const [loading, setLoading] = useState(false);
   const [adding, setAdding] = useState<string | null>(null);
+  const [requiresCfHandle, setRequiresCfHandle] = useState(false);
 
   useEffect(() => {
     fetchTopics();
@@ -28,6 +30,12 @@ export default function TopicsPage() {
     try {
       const res = await fetch("/api/topics");
       const data = await res.json();
+
+      if (res.status === 404 && data.code === "HANDLE_NOT_VERIFIED") {
+        setRequiresCfHandle(true);
+        return;
+      }
+
       if (!data.error) {
         setTopics(data.topics);
       }
@@ -41,7 +49,7 @@ export default function TopicsPage() {
     setSelectedTopic(topic);
     try {
       const res = await fetch(
-        `/api/topics?topic=${encodeURIComponent(topic)}&minRating=${minRating}&maxRating=${maxRating}`
+        `/api/topics?topic=${encodeURIComponent(topic)}&minRating=${minRating}&maxRating=${maxRating}`,
       );
       const data = await res.json();
       if (!data.error) {
@@ -74,6 +82,10 @@ export default function TopicsPage() {
     } finally {
       setAdding(null);
     }
+  }
+
+  if (requiresCfHandle) {
+    return <ConnectCfPrompt featureName="the Topic Ladder" />;
   }
 
   return (
@@ -214,12 +226,15 @@ export default function TopicsPage() {
                   textTransform: "capitalize",
                 }}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.background = "var(--color-primary-container)";
+                  e.currentTarget.style.background =
+                    "var(--color-primary-container)";
                   e.currentTarget.style.borderColor = "var(--color-primary)";
                 }}
                 onMouseLeave={(e) => {
-                  e.currentTarget.style.background = "var(--color-surface-container)";
-                  e.currentTarget.style.borderColor = "var(--color-outline-variant)";
+                  e.currentTarget.style.background =
+                    "var(--color-surface-container)";
+                  e.currentTarget.style.borderColor =
+                    "var(--color-outline-variant)";
                 }}
               >
                 {topic}
@@ -278,9 +293,17 @@ export default function TopicsPage() {
             </div>
 
             {loading ? (
-              <div style={{ textAlign: "center", padding: "3rem" }}>Loading problems...</div>
+              <div style={{ textAlign: "center", padding: "3rem" }}>
+                Loading problems...
+              </div>
             ) : (
-              <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
+              <div
+                style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: "0.75rem",
+                }}
+              >
                 {problems.map((problem, index) => (
                   <div
                     key={`${problem.contestId}-${problem.problemIndex}`}
@@ -315,7 +338,13 @@ export default function TopicsPage() {
                     </div>
 
                     <div style={{ flex: 1 }}>
-                      <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                      <div
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "0.5rem",
+                        }}
+                      >
                         <span
                           style={{
                             fontFamily: "var(--font-mono)",
@@ -379,7 +408,10 @@ export default function TopicsPage() {
                       </a>
                       <button
                         onClick={() => addToBoard(problem)}
-                        disabled={adding === `${problem.contestId}-${problem.problemIndex}`}
+                        disabled={
+                          adding ===
+                          `${problem.contestId}-${problem.problemIndex}`
+                        }
                         style={{
                           padding: "0.5rem 1rem",
                           borderRadius: "var(--radius-md)",
@@ -390,10 +422,14 @@ export default function TopicsPage() {
                           fontWeight: 600,
                           cursor: "pointer",
                           opacity:
-                            adding === `${problem.contestId}-${problem.problemIndex}` ? 0.6 : 1,
+                            adding ===
+                            `${problem.contestId}-${problem.problemIndex}`
+                              ? 0.6
+                              : 1,
                         }}
                       >
-                        {adding === `${problem.contestId}-${problem.problemIndex}`
+                        {adding ===
+                        `${problem.contestId}-${problem.problemIndex}`
                           ? "Adding..."
                           : "Add to Board"}
                       </button>

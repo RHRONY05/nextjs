@@ -6,7 +6,7 @@ import type { CfHandleData } from "./HandleStep";
 interface Props {
   cfData: CfHandleData;
   onComplete: () => void;
-  onBack:     () => void;
+  onBack: () => void;
 }
 
 type VerifyPhase = "waiting" | "success" | "expired";
@@ -20,18 +20,20 @@ interface VerificationProblem {
 
 export default function VerifyStep({ cfData, onComplete, onBack }: Props) {
   const [secondsLeft, setSecondsLeft] = useState(600);
-  const [phase, setPhase]             = useState<VerifyPhase>("waiting");
-  const [pollText, setPollText]       = useState("Waiting for your submission on Codeforces...");
-  const [problem, setProblem]         = useState<VerificationProblem | null>(null);
+  const [phase, setPhase] = useState<VerifyPhase>("waiting");
+  const [pollText, setPollText] = useState(
+    "Waiting for your submission on Codeforces...",
+  );
+  const [problem, setProblem] = useState<VerificationProblem | null>(null);
 
   const countdownRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const pollRef      = useRef<ReturnType<typeof setInterval> | null>(null);
-  const successRef   = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const successRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   function stop() {
     if (countdownRef.current) clearInterval(countdownRef.current);
-    if (pollRef.current)      clearInterval(pollRef.current);
-    if (successRef.current)   clearTimeout(successRef.current);
+    if (pollRef.current) clearInterval(pollRef.current);
+    if (successRef.current) clearTimeout(successRef.current);
   }
 
   useEffect(() => {
@@ -39,14 +41,17 @@ export default function VerifyStep({ cfData, onComplete, onBack }: Props) {
     (async () => {
       try {
         const res = await fetch("/api/onboarding/verify/initiate", {
-          method:  "POST",
+          method: "POST",
           headers: { "Content-Type": "application/json" },
-          body:    JSON.stringify({ cfHandle: cfData.handle }),
+          body: JSON.stringify({ cfHandle: cfData.handle }),
         });
         const data = await res.json();
 
         if (!res.ok) {
-          setPollText(data.message ?? "Failed to initiate verification. Please go back and try again.");
+          setPollText(
+            data.message ??
+              "Failed to initiate verification. Please go back and try again.",
+          );
           setPhase("expired");
           return;
         }
@@ -100,7 +105,9 @@ export default function VerifyStep({ cfData, onComplete, onBack }: Props) {
         } else if (data.status === "expired") {
           stop();
           setPhase("expired");
-          setPollText(data.message ?? "Time expired. Please go back and try again.");
+          setPollText(
+            data.message ?? "Time expired. Please go back and try again.",
+          );
         }
       } catch {
         // Network error — keep polling
@@ -117,18 +124,26 @@ export default function VerifyStep({ cfData, onComplete, onBack }: Props) {
   return (
     <div className="animate-fade-slide-in">
       <h1
-        className="mb-2 font-display font-bold tracking-tight"
-        style={{ fontSize: "1.375rem", color: "var(--color-on-surface)" }}
+        className="mb-3 font-display font-bold tracking-tight"
+        style={{ fontSize: "2rem", color: "var(--color-on-surface)" }}
       >
         Prove you own this handle
       </h1>
-      <p className="mb-5" style={{ fontSize: "0.9rem", color: "var(--color-on-surface-variant)", lineHeight: 1.6 }}>
-        Submit any solution to the problem below — even Wrong Answer counts. This proves you control the account.
+      <p
+        className="mb-6"
+        style={{
+          fontSize: "1.125rem",
+          color: "var(--color-on-surface-variant)",
+          lineHeight: 1.6,
+        }}
+      >
+        Submit any solution to the problem below — even Wrong Answer counts.
+        This proves you control the account.
       </p>
 
       {/* Mini CF profile */}
       <div
-        className="flex items-center gap-3 mb-5 pb-5"
+        className="flex items-center gap-4 mb-6 pb-6"
         style={{ borderBottom: "1px solid var(--color-outline-variant)" }}
       >
         {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -136,18 +151,26 @@ export default function VerifyStep({ cfData, onComplete, onBack }: Props) {
           src={cfData.avatar}
           alt={cfData.handle}
           className="rounded-full shrink-0"
-          style={{ width: "40px", height: "40px", objectFit: "cover", border: "2px solid var(--color-secondary)" }}
+          style={{
+            width: "56px",
+            height: "56px",
+            objectFit: "cover",
+            border: "2px solid var(--color-secondary)",
+          }}
         />
         <div>
-          <div className="font-display font-bold" style={{ fontSize: "0.9375rem", color: "var(--color-on-surface)" }}>
+          <div
+            className="font-display font-bold"
+            style={{ fontSize: "1.25rem", color: "var(--color-on-surface)" }}
+          >
             {cfData.handle}
           </div>
           <span
-            className="font-mono inline-block mt-0.5"
+            className="font-mono inline-block mt-1"
             style={{
-              fontSize: "0.6875rem",
+              fontSize: "0.875rem",
               fontWeight: 600,
-              padding: "0.15rem 0.5rem",
+              padding: "0.25rem 0.75rem",
               borderRadius: "9999px",
               background: "rgba(93,220,179,0.15)",
               color: "var(--color-secondary)",
@@ -160,72 +183,112 @@ export default function VerifyStep({ cfData, onComplete, onBack }: Props) {
 
       {/* Instruction box */}
       <div
-        className="rounded-xl mb-5"
+        className="rounded-2xl mb-6"
         style={{
           background: "var(--color-surface-container)",
           border: "1px solid var(--color-outline-variant)",
-          padding: "1rem 1.25rem",
+          padding: "1.5rem",
         }}
       >
-        <p style={{ fontSize: "0.875rem", color: "var(--color-on-surface-variant)", lineHeight: 1.6, marginBottom: "0.75rem" }}>
-          To verify this handle belongs to you, submit any solution to the problem below via Codeforces:
+        <p
+          style={{
+            fontSize: "1.05rem",
+            color: "var(--color-on-surface-variant)",
+            lineHeight: 1.6,
+            marginBottom: "1rem",
+          }}
+        >
+          To verify this handle belongs to you, submit any solution to the
+          problem below via Codeforces:
         </p>
 
         {/* Problem card */}
         {problem && (
           <div
-            className="flex items-center justify-between gap-3 rounded-lg mb-3"
-            style={{ background: "var(--color-surface-high)", padding: "0.75rem 1rem" }}
+            className="flex items-center justify-between gap-4 rounded-xl mb-4"
+            style={{
+              background: "var(--color-surface-high)",
+              padding: "1rem 1.25rem",
+            }}
           >
-            <span className="font-display font-bold" style={{ fontSize: "0.9375rem", color: "var(--color-on-surface)" }}>
-              {problem.contestId}{problem.problemIndex} — {problem.problemName}
+            <span
+              className="font-display font-bold"
+              style={{ fontSize: "1.125rem", color: "var(--color-on-surface)" }}
+            >
+              {problem.contestId}
+              {problem.problemIndex} — {problem.problemName}
             </span>
             <a
               href={problem.url}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center gap-1.5 shrink-0 rounded-md transition-colors"
+              className="flex items-center gap-2 shrink-0 rounded-lg transition-colors"
               style={{
-                fontSize: "0.8125rem",
+                fontSize: "1rem",
                 fontWeight: 600,
                 color: "var(--color-primary)",
-                border: "1px solid var(--color-primary-container)",
-                padding: "0.4rem 0.9rem",
+                border: "2px solid var(--color-primary-container)",
+                padding: "0.6rem 1.25rem",
                 textDecoration: "none",
                 whiteSpace: "nowrap",
               }}
             >
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
-                <polyline points="15 3 21 3 21 9"/>
-                <line x1="10" y1="14" x2="21" y2="3"/>
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+                <polyline points="15 3 21 3 21 9" />
+                <line x1="10" y1="14" x2="21" y2="3" />
               </svg>
               Open on Codeforces
             </a>
           </div>
         )}
 
-        <p style={{ fontSize: "0.75rem", color: "var(--color-outline)", fontStyle: "italic" }}>
-          Any verdict counts — even Wrong Answer. We just need to see a recent submission from this handle.
+        <p
+          style={{
+            fontSize: "0.9rem",
+            color: "var(--color-outline)",
+            fontStyle: "italic",
+          }}
+        >
+          Any verdict counts — even Wrong Answer. We just need to see a recent
+          submission from this handle.
         </p>
       </div>
 
       {/* Countdown timer */}
       {phase !== "success" && (
-        <div className="text-center mb-5">
+        <div className="text-center mb-6">
           <div
             className="font-mono"
             style={{
-              fontSize: "2.75rem",
+              fontSize: "3.5rem",
               fontWeight: 500,
               letterSpacing: "0.05em",
               lineHeight: 1,
-              color: expiring || phase === "expired" ? "var(--color-error)" : "var(--color-on-surface)",
+              color:
+                expiring || phase === "expired"
+                  ? "var(--color-error)"
+                  : "var(--color-on-surface)",
             }}
           >
             {mm}:{ss}
           </div>
-          <div style={{ fontSize: "0.75rem", color: "var(--color-outline)", marginTop: "0.25rem" }}>
+          <div
+            style={{
+              fontSize: "0.9rem",
+              color: "var(--color-outline)",
+              marginTop: "0.5rem",
+            }}
+          >
             {phase === "expired" ? "time expired" : "remaining to submit"}
           </div>
         </div>
@@ -234,24 +297,32 @@ export default function VerifyStep({ cfData, onComplete, onBack }: Props) {
       {/* Polling animation */}
       {phase === "waiting" && (
         <div
-          className="flex items-center justify-center gap-3 rounded-lg mb-5"
-          style={{ padding: "0.75rem", background: "var(--color-surface-container)" }}
+          className="flex items-center justify-center gap-4 rounded-xl mb-6"
+          style={{
+            padding: "1.25rem",
+            background: "var(--color-surface-container)",
+          }}
         >
-          <div className="flex gap-1.5">
+          <div className="flex gap-2">
             {[0, 1, 2].map((i) => (
               <div
                 key={i}
                 className="rounded-full"
                 style={{
-                  width: "6px",
-                  height: "6px",
+                  width: "8px",
+                  height: "8px",
                   background: "var(--color-primary)",
                   animation: `dotBounce 1.2s ${i * 0.2}s infinite ease-in-out`,
                 }}
               />
             ))}
           </div>
-          <span style={{ fontSize: "0.8125rem", color: "var(--color-on-surface-variant)" }}>
+          <span
+            style={{
+              fontSize: "1rem",
+              color: "var(--color-on-surface-variant)",
+            }}
+          >
             {pollText}
           </span>
         </div>
@@ -259,24 +330,32 @@ export default function VerifyStep({ cfData, onComplete, onBack }: Props) {
 
       {/* Success state */}
       {phase === "success" && (
-        <div className="flex flex-col items-center text-center py-6 animate-fade-slide-in">
+        <div className="flex flex-col items-center text-center py-8 animate-fade-slide-in">
           <div
-            className="flex items-center justify-center rounded-full mb-4"
+            className="flex items-center justify-center rounded-full mb-5"
             style={{
-              width: "64px",
-              height: "64px",
+              width: "80px",
+              height: "80px",
               background: "rgba(93,220,179,0.15)",
-              border: "2px solid var(--color-secondary)",
-              fontSize: "1.75rem",
-              boxShadow: "0 0 24px rgba(93,220,179,0.2)",
+              border: "3px solid var(--color-secondary)",
+              fontSize: "2.5rem",
+              boxShadow: "0 0 32px rgba(93,220,179,0.2)",
             }}
           >
             ✓
           </div>
-          <div className="font-display font-bold mb-2" style={{ fontSize: "1.125rem", color: "var(--color-secondary)" }}>
+          <div
+            className="font-display font-bold mb-3"
+            style={{ fontSize: "1.5rem", color: "var(--color-secondary)" }}
+          >
             Handle Verified!
           </div>
-          <p style={{ fontSize: "0.875rem", color: "var(--color-on-surface-variant)" }}>
+          <p
+            style={{
+              fontSize: "1.125rem",
+              color: "var(--color-on-surface-variant)",
+            }}
+          >
             Submission detected. Moving to the next step...
           </p>
         </div>
@@ -284,9 +363,18 @@ export default function VerifyStep({ cfData, onComplete, onBack }: Props) {
 
       {/* Back link */}
       <button
-        onClick={() => { stop(); onBack(); }}
-        className="block w-full text-center mt-4 transition-colors"
-        style={{ fontSize: "0.8125rem", color: "var(--color-outline)", background: "none", border: "none", cursor: "pointer" }}
+        onClick={() => {
+          stop();
+          onBack();
+        }}
+        className="block w-full text-center mt-6 transition-colors"
+        style={{
+          fontSize: "1rem",
+          color: "var(--color-outline)",
+          background: "none",
+          border: "none",
+          cursor: "pointer",
+        }}
       >
         ← Wrong handle? Go back
       </button>

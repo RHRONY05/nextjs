@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import ConnectCfPrompt from "@/components/dashboard/ConnectCfPrompt";
 
 interface Card {
   _id: string;
@@ -39,6 +40,7 @@ export default function BoardPage() {
   const [showAddModal, setShowAddModal] = useState(false);
   const [problemUrl, setProblemUrl] = useState("");
   const [draggedCard, setDraggedCard] = useState<Card | null>(null);
+  const [requiresCfHandle, setRequiresCfHandle] = useState(false);
 
   useEffect(() => {
     fetchCards();
@@ -48,6 +50,13 @@ export default function BoardPage() {
     try {
       const res = await fetch("/api/board");
       const data = await res.json();
+
+      if (res.status === 404 && data.code === "HANDLE_NOT_VERIFIED") {
+        setRequiresCfHandle(true);
+        setLoading(false);
+        return;
+      }
+
       if (!data.error) {
         // Sort "To Upsolve" by rating (ascending)
         const sortedToUpsolve = [...data.columns.to_upsolve].sort((a, b) => {
@@ -55,7 +64,7 @@ export default function BoardPage() {
           const ratingB = b.rating || 0;
           return ratingA - ratingB;
         });
-        
+
         setColumns({
           to_upsolve: sortedToUpsolve,
           trying: data.columns.trying,
@@ -75,9 +84,15 @@ export default function BoardPage() {
       const data = await res.json();
       if (res.ok) {
         if (data.addedCards === 0) {
-          alert(data.message || "No new problems to add from your participated contests.");
+          alert(
+            data.message ||
+              "No new problems to add from your participated contests.",
+          );
         } else {
-          alert(data.message || `Added ${data.addedCards} problem${data.addedCards > 1 ? 's' : ''}!`);
+          alert(
+            data.message ||
+              `Added ${data.addedCards} problem${data.addedCards > 1 ? "s" : ""}!`,
+          );
         }
         fetchCards();
       } else {
@@ -91,7 +106,11 @@ export default function BoardPage() {
   }
 
   async function handleClearSynced() {
-    if (!confirm("This will remove all contest-synced problems from your board. Manually added problems will remain. Continue?")) {
+    if (
+      !confirm(
+        "This will remove all contest-synced problems from your board. Manually added problems will remain. Continue?",
+      )
+    ) {
       return;
     }
 
@@ -192,7 +211,15 @@ export default function BoardPage() {
     setDraggedCard(null);
   }
 
-  function ProblemCard({ card, showNumber, number }: { card: Card; showNumber?: boolean; number?: number }) {
+  function ProblemCard({
+    card,
+    showNumber,
+    number,
+  }: {
+    card: Card;
+    showNumber?: boolean;
+    number?: number;
+  }) {
     return (
       <div
         className="problem-card"
@@ -227,7 +254,8 @@ export default function BoardPage() {
               width: "28px",
               height: "28px",
               borderRadius: "50%",
-              background: "linear-gradient(135deg, var(--color-primary-container), var(--color-primary))",
+              background:
+                "linear-gradient(135deg, var(--color-primary-container), var(--color-primary))",
               color: "var(--color-on-primary-container)",
               display: "flex",
               alignItems: "center",
@@ -243,7 +271,14 @@ export default function BoardPage() {
         )}
 
         {/* Header: ID + Rating */}
-        <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "0.5rem" }}>
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: "0.5rem",
+            marginBottom: "0.5rem",
+          }}
+        >
           <span
             style={{
               fontFamily: "var(--font-mono)",
@@ -300,7 +335,14 @@ export default function BoardPage() {
         )}
 
         {/* Tags */}
-        <div style={{ display: "flex", flexWrap: "wrap", gap: "0.375rem", marginBottom: "0.75rem" }}>
+        <div
+          style={{
+            display: "flex",
+            flexWrap: "wrap",
+            gap: "0.375rem",
+            marginBottom: "0.75rem",
+          }}
+        >
           {card.tags.slice(0, 3).map((tag) => (
             <span
               key={tag}
@@ -331,7 +373,8 @@ export default function BoardPage() {
               gap: "0.375rem",
               padding: "0.5rem",
               borderRadius: "var(--radius-md)",
-              background: "linear-gradient(135deg, var(--color-primary-container), var(--color-primary))",
+              background:
+                "linear-gradient(135deg, var(--color-primary-container), var(--color-primary))",
               color: "var(--color-on-primary-container)",
               fontSize: "0.8125rem",
               fontWeight: 600,
@@ -409,6 +452,10 @@ export default function BoardPage() {
     return <div style={{ padding: "2rem" }}>Loading board...</div>;
   }
 
+  if (requiresCfHandle) {
+    return <ConnectCfPrompt featureName="the Upsolve Board" />;
+  }
+
   return (
     <>
       <header className="board-header">
@@ -420,7 +467,7 @@ export default function BoardPage() {
             className="btn-clear"
             onClick={handleClearSynced}
             disabled={clearing}
-            style={{ 
+            style={{
               opacity: clearing ? 0.6 : 1,
               background: "transparent",
               border: "1px solid var(--color-error)",
@@ -476,7 +523,9 @@ export default function BoardPage() {
               strokeWidth="2.5"
               strokeLinecap="round"
               strokeLinejoin="round"
-              style={{ animation: syncing ? "spinCW 1s linear infinite" : "none" }}
+              style={{
+                animation: syncing ? "spinCW 1s linear infinite" : "none",
+              }}
             >
               <polyline points="23 4 23 10 17 10" />
               <polyline points="1 20 1 14 7 14" />
@@ -484,7 +533,10 @@ export default function BoardPage() {
             </svg>
             {syncing ? "Syncing..." : "Sync Contest Problems"}
           </button>
-          <button className="btn-add-problem" onClick={() => setShowAddModal(true)}>
+          <button
+            className="btn-add-problem"
+            onClick={() => setShowAddModal(true)}
+          >
             <svg
               width="13"
               height="13"
@@ -517,7 +569,9 @@ export default function BoardPage() {
         >
           <div className="kanban-col__header">
             <span className="kanban-col__title">To Upsolve</span>
-            <span className="kanban-col__badge">{columns.to_upsolve.length}</span>
+            <span className="kanban-col__badge">
+              {columns.to_upsolve.length}
+            </span>
           </div>
           <div
             className="kanban-col__body"
@@ -538,11 +592,18 @@ export default function BoardPage() {
                   fontSize: "0.875rem",
                 }}
               >
-                No problems yet. Click "Sync Contest Problems" to add unsolved problems from contests you participated in, or "Add Problem" to manually add any problem!
+                No problems yet. Click "Sync Contest Problems" to add unsolved
+                problems from contests you participated in, or "Add Problem" to
+                manually add any problem!
               </div>
             ) : (
               columns.to_upsolve.map((card, index) => (
-                <ProblemCard key={card._id} card={card} showNumber number={index + 1} />
+                <ProblemCard
+                  key={card._id}
+                  card={card}
+                  showNumber
+                  number={index + 1}
+                />
               ))
             )}
           </div>
@@ -585,7 +646,9 @@ export default function BoardPage() {
                 Drag problems here when you start working on them
               </div>
             ) : (
-              columns.trying.map((card) => <ProblemCard key={card._id} card={card} />)
+              columns.trying.map((card) => (
+                <ProblemCard key={card._id} card={card} />
+              ))
             )}
           </div>
         </div>
@@ -627,7 +690,9 @@ export default function BoardPage() {
                 Drag problems here when you solve them to earn XP!
               </div>
             ) : (
-              columns.solved.map((card) => <ProblemCard key={card._id} card={card} />)
+              columns.solved.map((card) => (
+                <ProblemCard key={card._id} card={card} />
+              ))
             )}
           </div>
         </div>
@@ -668,7 +733,13 @@ export default function BoardPage() {
             >
               Add Problem to Board
             </h2>
-            <p style={{ fontSize: "0.875rem", color: "var(--color-on-surface-variant)", marginBottom: "1rem" }}>
+            <p
+              style={{
+                fontSize: "0.875rem",
+                color: "var(--color-on-surface-variant)",
+                marginBottom: "1rem",
+              }}
+            >
               Paste a Codeforces problem URL:
             </p>
             <input
@@ -696,7 +767,8 @@ export default function BoardPage() {
                   flex: 1,
                   padding: "0.75rem",
                   borderRadius: "var(--radius-md)",
-                  background: "linear-gradient(135deg, var(--color-primary-container), var(--color-primary))",
+                  background:
+                    "linear-gradient(135deg, var(--color-primary-container), var(--color-primary))",
                   color: "var(--color-on-primary-container)",
                   border: "none",
                   fontWeight: 600,

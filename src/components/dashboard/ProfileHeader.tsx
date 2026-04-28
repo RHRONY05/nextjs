@@ -48,14 +48,14 @@ export default function ProfileHeader({
 
   useEffect(() => {
     if (!user.cfHandle) return;
-    
+
     // Always try to get the freshest data for the profile header directly from CF
     const controller = new AbortController();
     fetch(`https://codeforces.com/api/user.info?handles=${user.cfHandle}`, {
-      signal: controller.signal
+      signal: controller.signal,
     })
-      .then(res => res.json())
-      .then(data => {
+      .then((res) => res.json())
+      .then((data) => {
         if (data.status === "OK" && data.result?.length > 0) {
           const p = data.result[0];
           setLiveProfile({
@@ -68,10 +68,10 @@ export default function ProfileHeader({
             country: p.country,
             organization: p.organization,
             cfAvatar: p.titlePhoto || p.avatar,
-          });
+          } as any);
         }
       })
-      .catch(err => {
+      .catch((err) => {
         if (err.name !== "AbortError") {
           console.error("Failed to fetch live CF profile:", err);
         }
@@ -114,11 +114,23 @@ export default function ProfileHeader({
   if (!mounted) {
     return (
       <div className="row-profile">
-        <div className="profile-card profile-card--skeleton" style={{ height: "160px" }} />
+        <div
+          className="profile-card profile-card--skeleton"
+          style={{ height: "160px" }}
+        />
         <div className="stat-cards">
-          <div className="stat-card stat-card--skeleton" style={{ height: "100px" }} />
-          <div className="stat-card stat-card--skeleton" style={{ height: "100px" }} />
-          <div className="stat-card stat-card--skeleton" style={{ height: "100px" }} />
+          <div
+            className="stat-card stat-card--skeleton"
+            style={{ height: "100px" }}
+          />
+          <div
+            className="stat-card stat-card--skeleton"
+            style={{ height: "100px" }}
+          />
+          <div
+            className="stat-card stat-card--skeleton"
+            style={{ height: "100px" }}
+          />
         </div>
       </div>
     );
@@ -137,24 +149,40 @@ export default function ProfileHeader({
               onError={() => setAvatarError(true)}
             />
             <div className="profile-card__info">
-              <div 
+              <div
                 className="profile-card__handle"
-                style={{ color: getRankColor(liveProfile?.rank), fontWeight: "bold" }}
+                style={{
+                  color: getRankColor(liveProfile?.rank),
+                  fontWeight: "bold",
+                }}
               >
                 {liveProfile?.rank?.toLowerCase().includes("legendary") ? (
                   <>
-                    <span style={{ color: "var(--color-on-surface)" }}>{(liveProfile?.handle ?? user.cfHandle)?.[0] ?? user.name[0]}</span>
-                    <span>{((liveProfile as any)?.handle ?? user.cfHandle ?? user.name).slice(1)}</span>
+                    <span style={{ color: "var(--color-on-surface)" }}>
+                      {((liveProfile as any)?.handle ?? user.cfHandle)?.[0] ??
+                        user.name[0]}
+                    </span>
+                    <span>
+                      {(
+                        (liveProfile as any)?.handle ??
+                        user.cfHandle ??
+                        user.name
+                      ).slice(1)}
+                    </span>
                   </>
                 ) : (
-                  (liveProfile as any)?.handle ?? user.cfHandle ?? user.name
+                  ((liveProfile as any)?.handle ?? user.cfHandle ?? user.name)
                 )}
               </div>
-              <span 
+              <span
                 className="profile-card__rating-badge"
-                style={{ color: getRankColor(liveProfile?.rank), fontWeight: 600 }}
+                style={{
+                  color: getRankColor(liveProfile?.rank),
+                  fontWeight: 600,
+                }}
               >
-                {liveProfile?.rating ?? "—"} · {capitalize(liveProfile?.rank)}
+                {liveProfile?.rating ?? "NA"} ·{" "}
+                {capitalize(liveProfile?.rank ?? "Not Connected")}
               </span>
             </div>
           </div>
@@ -205,8 +233,16 @@ export default function ProfileHeader({
               <polyline points="17 6 23 6 23 12" />
             </svg>
             Peak rating:{" "}
-            <span style={{ color: getRankColor(liveProfile?.maxRank), fontWeight: 600 }}>
-              {liveProfile?.maxRating ?? "—"} ({capitalize(liveProfile?.maxRank)})
+            <span
+              style={{
+                color: getRankColor(liveProfile?.maxRank),
+                fontWeight: 600,
+              }}
+            >
+              {liveProfile?.maxRating ?? "NA"}{" "}
+              {liveProfile?.maxRank
+                ? `(${capitalize(liveProfile.maxRank)})`
+                : ""}
             </span>
           </div>
         </div>

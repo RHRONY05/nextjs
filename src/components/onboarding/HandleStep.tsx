@@ -19,7 +19,7 @@ export default function HandleStep({ onComplete }: Props) {
   const [phase, setPhase] = useState<Phase>("idle");
   const [error, setError] = useState("");
   const [found, setFound] = useState<CfHandleData | null>(null);
-  const inputRef          = useRef<HTMLInputElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   async function handleLookup() {
     const handle = inputRef.current?.value.trim() ?? "";
@@ -34,10 +34,10 @@ export default function HandleStep({ onComplete }: Props) {
     setPhase("loading");
 
     try {
-      const res  = await fetch("/api/onboarding/handle", {
-        method:  "POST",
+      const res = await fetch("/api/onboarding/handle", {
+        method: "POST",
         headers: { "Content-Type": "application/json" },
-        body:    JSON.stringify({ cfHandle: handle }),
+        body: JSON.stringify({ cfHandle: handle }),
       });
       const data = await res.json();
 
@@ -51,8 +51,10 @@ export default function HandleStep({ onComplete }: Props) {
       setFound({
         handle: p.handle,
         rating: p.rating ?? 0,
-        rank:   p.rank   ?? "unrated",
-        avatar: p.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(p.handle)}&background=5865F2&color=fff`,
+        rank: p.rank ?? "unrated",
+        avatar:
+          p.avatar ||
+          `https://ui-avatars.com/api/?name=${encodeURIComponent(p.handle)}&background=5865F2&color=fff`,
       });
       setPhase("found");
     } catch {
@@ -70,19 +72,27 @@ export default function HandleStep({ onComplete }: Props) {
   return (
     <div className="animate-fade-slide-in">
       <h1
-        className="mb-2 font-display font-bold tracking-tight"
-        style={{ fontSize: "1.375rem", color: "var(--color-on-surface)" }}
+        className="mb-3 font-display font-bold tracking-tight"
+        style={{ fontSize: "2rem", color: "var(--color-on-surface)" }}
       >
         Connect your Codeforces account
       </h1>
-      <p className="mb-6" style={{ fontSize: "0.9rem", color: "var(--color-on-surface-variant)", lineHeight: 1.6 }}>
-        Enter your CF handle so we can sync your contest history, solved problems, and stats.
+      <p
+        className="mb-8"
+        style={{
+          fontSize: "1.125rem",
+          color: "var(--color-on-surface-variant)",
+          lineHeight: 1.6,
+        }}
+      >
+        Enter your CF handle so we can sync your contest history, solved
+        problems, and stats.
       </p>
 
       {/* Profile result card */}
       {isFound && found && (
         <div
-          className="flex items-center gap-3 rounded-xl p-4 mb-5 animate-fade-slide-in"
+          className="flex items-center gap-4 rounded-2xl p-5 mb-6 animate-fade-slide-in"
           style={{
             background: "var(--color-surface-container)",
             border: "1px solid rgba(93,220,179,0.25)",
@@ -93,18 +103,26 @@ export default function HandleStep({ onComplete }: Props) {
             src={found.avatar}
             alt={found.handle}
             className="rounded-full shrink-0"
-            style={{ width: "44px", height: "44px", objectFit: "cover", border: "2px solid var(--color-secondary)" }}
+            style={{
+              width: "64px",
+              height: "64px",
+              objectFit: "cover",
+              border: "2px solid var(--color-secondary)",
+            }}
           />
           <div className="flex-1 min-w-0">
-            <div className="font-display font-bold" style={{ fontSize: "1rem", color: "var(--color-on-surface)" }}>
+            <div
+              className="font-display font-bold"
+              style={{ fontSize: "1.5rem", color: "var(--color-on-surface)" }}
+            >
               {found.handle}
             </div>
             <span
-              className="font-mono inline-block mt-0.5"
+              className="font-mono inline-block mt-1"
               style={{
-                fontSize: "0.75rem",
+                fontSize: "0.875rem",
                 fontWeight: 600,
-                padding: "0.15rem 0.5rem",
+                padding: "0.25rem 0.75rem",
                 borderRadius: "9999px",
                 background: "rgba(93,220,179,0.15)",
                 color: "var(--color-secondary)",
@@ -113,16 +131,23 @@ export default function HandleStep({ onComplete }: Props) {
               {found.rating} · {found.rank}
             </span>
           </div>
-          <span style={{ fontSize: "1.25rem", color: "var(--color-secondary)" }}>✓</span>
+          <span style={{ fontSize: "1.5rem", color: "var(--color-secondary)" }}>
+            ✓
+          </span>
         </div>
       )}
 
       {/* Handle input */}
-      <div className="mb-5">
+      <div className="mb-6">
         <label
           htmlFor="cf-handle-input"
-          className="block mb-2"
-          style={{ fontSize: "0.8125rem", fontWeight: 600, color: "var(--color-on-surface-variant)", letterSpacing: "0.01em" }}
+          className="block mb-4"
+          style={{
+            fontSize: "1.125rem",
+            fontWeight: 700,
+            color: "var(--color-on-surface)",
+            letterSpacing: "0.01em",
+          }}
         >
           Codeforces Handle
         </label>
@@ -134,40 +159,59 @@ export default function HandleStep({ onComplete }: Props) {
           autoComplete="off"
           spellCheck={false}
           disabled={isFound}
-          onKeyDown={(e) => { if (e.key === "Enter" && !isFound) handleLookup(); }}
-          className="w-full rounded-md outline-none transition-shadow"
+          onKeyDown={(e) => {
+            if (e.key === "Enter" && !isFound) handleLookup();
+          }}
+          className="w-full rounded-2xl outline-none transition-all"
           style={{
             background: "var(--color-surface-container)",
             border: error
-              ? "1px solid var(--color-error)"
-              : "1px solid var(--color-outline-variant)",
-            padding: "0.75rem 1rem",
+              ? "2px solid var(--color-error)"
+              : "2px solid var(--color-outline-variant)",
+            padding: "1.25rem 1.5rem",
             color: "var(--color-on-surface)",
             fontFamily: "var(--font-body)",
-            fontSize: "0.9375rem",
+            fontSize: "1.25rem",
             opacity: isFound ? 0.6 : 1,
+            boxShadow: "inset 0 2px 4px rgba(0,0,0,0.2)",
           }}
         />
-        <p style={{ fontSize: "0.75rem", color: "var(--color-outline)", marginTop: "0.5rem" }}>
-          Your handle is the username you use to sign in to codeforces.com
-        </p>
-        {error && (
-          <p style={{ fontSize: "0.75rem", color: "var(--color-error)", marginTop: "0.5rem" }}>
-            {error}
-          </p>
-        )}
+        <div style={{ marginTop: "1rem", minHeight: "24px" }}>
+          {error ? (
+            <p
+              style={{
+                fontSize: "0.9375rem",
+                color: "var(--color-error)",
+                margin: 0,
+              }}
+            >
+              {error}
+            </p>
+          ) : (
+            <p
+              style={{
+                fontSize: "0.9375rem",
+                color: "var(--color-outline)",
+                margin: 0,
+              }}
+            >
+              Your handle is the username you use to sign in to codeforces.com
+            </p>
+          )}
+        </div>
       </div>
 
       {/* CTA */}
       <button
         onClick={isFound ? handleContinue : handleLookup}
         disabled={phase === "loading"}
-        className="w-full flex items-center justify-center gap-2 rounded-lg font-display font-bold transition-all"
+        className="w-full flex items-center justify-center gap-2 rounded-xl font-display font-bold transition-all"
         style={{
-          padding: "0.875rem 1.5rem",
-          fontSize: "0.9375rem",
+          padding: "1rem 2rem",
+          fontSize: "1.125rem",
           color: "var(--color-on-primary-container)",
-          background: "linear-gradient(135deg, var(--color-primary-container), var(--color-primary))",
+          background:
+            "linear-gradient(135deg, var(--color-primary-container), var(--color-primary))",
           border: "none",
           cursor: phase === "loading" ? "not-allowed" : "pointer",
           opacity: phase === "loading" ? 0.7 : 1,
@@ -177,7 +221,8 @@ export default function HandleStep({ onComplete }: Props) {
           <span
             className="inline-block rounded-full"
             style={{
-              width: "16px", height: "16px",
+              width: "20px",
+              height: "20px",
               border: "2px solid rgba(255,255,255,0.3)",
               borderTopColor: "white",
               animation: "spinCW 0.7s linear infinite",

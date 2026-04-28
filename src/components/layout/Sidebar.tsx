@@ -8,7 +8,7 @@ import type { User } from "@/types";
 import { Sword } from "lucide-react";
 
 const NAV_ITEMS = [
-// ... (NAV_ITEMS and getIconFor remain same)
+  // ... (NAV_ITEMS and getIconFor remain same)
   { label: "Dashboard", href: "/dashboard" },
   { label: "Upsolve Board", href: "/board" },
   { label: "Topic Ladder", href: "/topics" },
@@ -106,10 +106,8 @@ function getIconFor(label: string) {
           <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
         </svg>
       );
-      case "Code Battle":
-        return (
-          <Sword className="text-white w-7 h-7" />
-        );
+    case "Code Battle":
+      return <Sword className="text-white w-7 h-7" />;
     default:
       return null;
   }
@@ -134,7 +132,7 @@ export default function Sidebar({ user }: { user: User }) {
     // This function just returns the initial best candidate
 
     const avatar = user.cfProfile?.cfAvatar;
-    if (avatar && !avatarError) {
+    if (user.cfHandleVerified && avatar && !avatarError) {
       if (avatar.startsWith("https:https://")) {
         return avatar.replace("https:https://", "https://");
       }
@@ -257,10 +255,10 @@ export default function Sidebar({ user }: { user: User }) {
         <div className="sidebar__user-info">
           <div className="sidebar__user-name">{user.name}</div>
           <div className="sidebar__user-rank">
-            {user.cfProfile?.rank
+            {user.cfHandleVerified && user.cfProfile?.rank
               ? user.cfProfile.rank.charAt(0).toUpperCase() +
                 user.cfProfile.rank.slice(1).replace(/_/g, " ")
-              : "Newcomer"}
+              : "Not Connected"}
           </div>
         </div>
       </div>
